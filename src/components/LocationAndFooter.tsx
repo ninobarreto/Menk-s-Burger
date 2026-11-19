@@ -1,4 +1,4 @@
-import { ArrowUpRight, Clock, MapPin, MessageCircle } from 'lucide-react';
+import { ArrowUpRight, Clock, Lock, MapPin, MessageCircle } from 'lucide-react';
 import { BRAND_IMAGES, WHATSAPP_DISPLAY, WHATSAPP_NUMBER } from '../data/catalog';
 import type { Translations } from '../i18n/translations';
 
@@ -187,16 +187,28 @@ export function LocationAndFooter({
             <span>{t.footerClosing}</span>
           </div>
 
-          <div className="mt-3 border-t border-white/5 pt-3 text-center text-[11.5px] text-[#9b9086] sm:text-left">
-            <span>{t.developedByPrefix} </span>
-            <a
-              href="https://wa.me/5571992129125"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-[#d9cebf] transition-colors hover:text-[#f5a623]"
+          <div className="mt-3 flex items-center justify-between gap-3 border-t border-white/5 pt-3 text-[11.5px] text-[#9b9086]">
+            <div>
+              <span>{t.developedByPrefix} </span>
+              <a
+                href="https://wa.me/5571992129125"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-[#d9cebf] transition-colors hover:text-[#f5a623]"
+              >
+                Barreto Web design · 71 992129125
+              </a>
+            </div>
+
+            <button
+              type="button"
+              onClick={onOpenOwnerArea}
+              aria-label={isOwner ? t.footerAdmin : t.footerOwnerLogin}
+              title={isOwner ? t.footerAdmin : t.footerOwnerLogin}
+              className="inline-flex h-7 w-7 shrink-0 cursor-pointer items-center justify-center rounded-[2px] text-[#5e554d] transition-colors hover:bg-white/5 hover:text-[#f5a623]"
             >
-              Barreto Web design · 71 992129125
-            </a>
+              <Lock className="h-3.5 w-3.5" aria-hidden="true" />
+            </button>
           </div>
         </div>
       </footer>

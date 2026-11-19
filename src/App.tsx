@@ -169,16 +169,26 @@ export default function App() {
     }
   }, [isOwner]);
 
-  // Open owner login (or admin panel if already logged in) when accessing #admin
+  // Open owner login (or admin panel if already logged in) via #admin hash or Alt+Shift+A
   useEffect(() => {
     const checkAdminHash = () => {
       if (window.location.hash.toLowerCase() === '#admin') {
         handleOpenOwnerArea();
       }
     };
+    const handleShortcut = (e: KeyboardEvent) => {
+      if (e.altKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        handleOpenOwnerArea();
+      }
+    };
     checkAdminHash();
     window.addEventListener('hashchange', checkAdminHash);
-    return () => window.removeEventListener('hashchange', checkAdminHash);
+    window.addEventListener('keydown', handleShortcut);
+    return () => {
+      window.removeEventListener('hashchange', checkAdminHash);
+      window.removeEventListener('keydown', handleShortcut);
+    };
   }, [handleOpenOwnerArea]);
 
   const handleOwnerAuthenticate = useCallback(
