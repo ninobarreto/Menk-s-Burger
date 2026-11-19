@@ -1,0 +1,103 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Bebas";
+  src: url("/assets/menks/bebas.woff2") format("woff2");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Mont";
+  src: url("/assets/menks/mont.woff2") format("woff2");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@theme {
+  --font-display: "Bebas", Impact, sans-serif;
+  --font-body: "Mont", system-ui, -apple-system, sans-serif;
+
+  --color-charcoal: #171514;
+  --color-surface: #211d1a;
+  --color-surface-raised: #28231f;
+  --color-paper: #f6f1e8;
+  --color-paper-card: #f7f3eb;
+  --color-ink: #f8f4ec;
+  --color-dark: #211d1a;
+  --color-muted: #c1b9ae;
+  --color-gold: #f5a623;
+  --color-gold-hover: #ffc34f;
+  --color-crimson: #a83b2f;
+  --color-olive: #638b25;
+  --color-olive-hover: #6f9c2a;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 96px;
+    background-color: #171514;
+    color: #f8f4ec;
+    font-family: var(--font-body);
+  }
+
+  body {
+    margin: 0;
+    background-color: #171514;
+    color: #f8f4ec;
+    font-size: 15px;
+    line-height: 1.65;
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  ::selection {
+    background-color: #f5a623;
+    color: #1b1713;
+  }
+
+  button,
+  a,
+  input,
+  textarea,
+  select {
+    outline-color: #ffc34f;
+  }
+
+  :focus-visible {
+    outline: 2px solid #ffc34f;
+    outline-offset: 2px;
+  }
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-body {
+  font-family: var(--font-body);
+}
+
+.text-balance {
+  text-wrap: balance;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
