@@ -149,6 +149,16 @@ export default function App() {
     [isOwner]
   );
 
+  const clearAdminHash = useCallback(() => {
+    if (window.location.hash.toLowerCase() === '#admin') {
+      window.history.replaceState(
+        null,
+        '',
+        window.location.pathname + window.location.search
+      );
+    }
+  }, []);
+
   const handleOpenOwnerArea = useCallback(() => {
     setCartOpen(false);
     if (isOwner) {
@@ -158,6 +168,18 @@ export default function App() {
       setLoginOpen(true);
     }
   }, [isOwner]);
+
+  // Open owner login (or admin panel if already logged in) when accessing #admin
+  useEffect(() => {
+    const checkAdminHash = () => {
+      if (window.location.hash.toLowerCase() === '#admin') {
+        handleOpenOwnerArea();
+      }
+    };
+    checkAdminHash();
+    window.addEventListener('hashchange', checkAdminHash);
+    return () => window.removeEventListener('hashchange', checkAdminHash);
+  }, [handleOpenOwnerArea]);
 
   const handleOwnerAuthenticate = useCallback(
     (username: string, password: string): boolean => {
@@ -185,13 +207,14 @@ export default function App() {
     setIsOwner(false);
     setAdminOpen(false);
     setEditingProductId(null);
+    clearAdminHash();
     try {
       sessionStorage.removeItem(OWNER_SESSION_STORAGE_KEY);
     } catch {
       // Ignore storage errors
     }
     notify(t.ownerAuth.toastLoggedOut, 'info');
-  }, [notify, t.ownerAuth.toastLoggedOut]);
+  }, [clearAdminHash, notify, t.ownerAuth.toastLoggedOut]);
 
   const handleChangeOwnerPassword = useCallback(
     (newPassword: string) => {
@@ -320,7 +343,10 @@ export default function App() {
       <OwnerLoginModal
         open={loginOpen}
         t={t.ownerAuth}
-        onClose={() => setLoginOpen(false)}
+        onClose={() => {
+          setLoginOpen(false);
+          clearAdminHash();
+        }}
         onAuthenticate={handleOwnerAuthenticate}
       />
 
@@ -337,6 +363,7 @@ export default function App() {
         onClose={() => {
           setAdminOpen(false);
           setEditingProductId(null);
+          clearAdminHash();
         }}
         onSaveProduct={saveProduct}
         onRequestDeleteProduct={(product) =>

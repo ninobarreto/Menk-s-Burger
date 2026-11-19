@@ -168,13 +168,15 @@ export function LocationAndFooter({
               <a href="#localizacao" className="transition-colors hover:text-[#f5a623]">
                 {t.footerLocation}
               </a>
-              <button
-                type="button"
-                onClick={onOpenOwnerArea}
-                className="cursor-pointer transition-colors hover:text-[#f5a623]"
-              >
-                {isOwner ? t.footerAdmin : t.footerOwnerLogin}
-              </button>
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={onOpenOwnerArea}
+                  className="cursor-pointer transition-colors hover:text-[#f5a623]"
+                >
+                  {t.footerAdmin}
+                </button>
+              )}
             </nav>
           </div>
 
