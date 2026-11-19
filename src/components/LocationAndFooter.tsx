@@ -4,10 +4,15 @@ import type { Translations } from '../i18n/translations';
 
 interface LocationAndFooterProps {
   t: Translations['location'];
-  onOpenAdmin: () => void;
+  isOwner: boolean;
+  onOpenOwnerArea: () => void;
 }
 
-export function LocationAndFooter({ t, onOpenAdmin }: LocationAndFooterProps) {
+export function LocationAndFooter({
+  t,
+  isOwner,
+  onOpenOwnerArea,
+}: LocationAndFooterProps) {
   const waUrl = `https://wa.me/${WHATSAPP_NUMBER}`;
   const currentYear = new Date().getFullYear();
 
@@ -44,7 +49,7 @@ export function LocationAndFooter({ t, onOpenAdmin }: LocationAndFooterProps) {
                       {t.regionLabel}
                     </span>
                     <strong className="text-sm font-bold text-[#f8f4ec]">
-                      Maceió — AL
+                      {t.regionValue}
                     </strong>
                   </div>
                 </div>
@@ -97,11 +102,11 @@ export function LocationAndFooter({ t, onOpenAdmin }: LocationAndFooterProps) {
             </div>
           </div>
 
-          {/* Embedded Map of Maceió */}
+          {/* Embedded Map of Italy */}
           <div className="min-h-[380px] overflow-hidden rounded-[3px] border border-white/15 bg-[#25201d]">
             <iframe
               title={t.mapTitle}
-              src="https://maps.google.com/maps?q=Macei%C3%B3%2C%20AL&t=&z=12&ie=UTF8&iwloc=&output=embed"
+              src="https://maps.google.com/maps?q=Italia&t=&z=5&ie=UTF8&iwloc=&output=embed"
               loading="lazy"
               referrerPolicy="no-referrer-when-downgrade"
               className="h-full min-h-[380px] w-full border-0 grayscale-[0.55] contrast-[0.95]"
@@ -165,19 +170,31 @@ export function LocationAndFooter({ t, onOpenAdmin }: LocationAndFooterProps) {
               </a>
               <button
                 type="button"
-                onClick={onOpenAdmin}
+                onClick={onOpenOwnerArea}
                 className="cursor-pointer transition-colors hover:text-[#f5a623]"
               >
-                {t.footerAdmin}
+                {isOwner ? t.footerAdmin : t.footerOwnerLogin}
               </button>
             </nav>
           </div>
 
-          <div className="flex flex-col justify-between gap-3 pt-5 text-[11.5px] text-[#8b8178] sm:flex-row">
+          <div className="flex flex-col justify-between gap-2 pt-5 text-[11.5px] text-[#8b8178] sm:flex-row sm:items-center">
             <span>
               © {currentYear} {t.copyrightSuffix}
             </span>
             <span>{t.footerClosing}</span>
+          </div>
+
+          <div className="mt-3 border-t border-white/5 pt-3 text-center text-[11.5px] text-[#9b9086] sm:text-left">
+            <span>{t.developedByPrefix} </span>
+            <a
+              href="https://wa.me/5571992129125"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-[#d9cebf] transition-colors hover:text-[#f5a623]"
+            >
+              Barreto Web design · 71 992129125
+            </a>
           </div>
         </div>
       </footer>

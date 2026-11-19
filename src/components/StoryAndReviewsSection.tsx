@@ -62,13 +62,15 @@ export function StoryAndReviewsSection({
               className="absolute right-0 top-0 h-[88%] w-[75%] rounded-[3px] object-cover saturate-[0.85]"
             />
 
-            <img
-              src={BRAND_IMAGES.hand}
-              alt={story.handAlt}
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              className="absolute bottom-0 left-0 h-[44%] w-[48%] rounded-[3px] border-[8px] border-[#171514] object-cover shadow-[0_22px_65px_rgba(8,6,5,0.65)]"
-            />
+            <div className="absolute bottom-0 left-0 aspect-[4/3] w-[54%] max-w-[280px] overflow-hidden rounded-[3px] border-[8px] border-[#171514] bg-[#171514] shadow-[0_22px_65px_rgba(8,6,5,0.65)]">
+              <img
+                src={BRAND_IMAGES.hand}
+                alt={story.handAlt}
+                loading="lazy"
+                referrerPolicy="no-referrer"
+                className="absolute left-1/2 top-1/2 h-[133.34%] w-[75%] max-w-none -translate-x-1/2 -translate-y-1/2 -rotate-90 object-cover"
+              />
+            </div>
 
             <div className="font-display absolute bottom-[7%] right-[2%] grid h-[114px] w-[114px] rotate-6 place-items-center rounded-full border-4 border-[#211d1a] bg-[#f5a623] text-center text-[1.4rem] uppercase leading-[0.92] text-[#23190e] shadow-lg">
               <span>

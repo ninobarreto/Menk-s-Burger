@@ -23,10 +23,10 @@ export function Header({
   const [mobileOpen, setMobileOpen] = useState(false);
 
   const navLinks = [
-    { href: '#diferenciais', label: t.experience },
     { href: '#cardapio', label: t.menu },
     { href: '#como-pedir', label: t.howToOrder },
     { href: '#sobre', label: t.about },
+    { href: '#diferenciais', label: t.experience },
     { href: '#localizacao', label: t.location },
   ];
 
@@ -53,7 +53,7 @@ export function Header({
           : 'bg-[#171514]/80 backdrop-blur-md'
       }`}
     >
-      <div className="mx-auto flex h-[76px] w-full max-w-[1180px] items-center justify-between gap-6 px-6 lg:gap-8">
+      <div className="mx-auto flex h-[76px] w-full max-w-[1180px] items-center justify-between gap-2 px-4 sm:gap-4 sm:px-6 lg:gap-8">
         {/* Zone 1: Single Brand Wordmark / Logo */}
         <a
           href="#inicio"
@@ -64,7 +64,7 @@ export function Header({
             src={BRAND_IMAGES.logo}
             alt="Logo Menk’s Burger"
             referrerPolicy="no-referrer"
-            className="h-[54px] w-[148px] object-contain object-left"
+            className="h-[44px] w-[108px] object-contain object-left sm:h-[54px] sm:w-[148px]"
           />
         </a>
 
@@ -126,15 +126,50 @@ export function Header({
           </div>
         </nav>
 
-        {/* Zone 3: 1 Primary Action (+ mobile menu toggle) */}
-        <div className="flex shrink-0 items-center gap-3">
+        {/* Zone 3: Mobile Language Switch + Primary Action + Mobile Menu Toggle */}
+        <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          {/* Visible Language Switcher on Mobile / Tablet */}
+          <div
+            role="group"
+            aria-label={t.languageLabel}
+            className="inline-flex shrink-0 items-center gap-0.5 rounded-[3px] border border-white/15 bg-[#211d1a] p-0.5 lg:hidden"
+          >
+            <button
+              type="button"
+              onClick={() => onChangeLocale('pt')}
+              aria-pressed={locale === 'pt'}
+              title="Português (Brasil)"
+              className={`whitespace-nowrap rounded-[2px] px-2 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] transition-colors duration-150 ${
+                locale === 'pt'
+                  ? 'bg-[#f5a623] text-[#23190e]'
+                  : 'text-[#eee7dd] hover:text-[#f5a623]'
+              }`}
+            >
+              PT
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeLocale('it')}
+              aria-pressed={locale === 'it'}
+              title="Italiano"
+              className={`whitespace-nowrap rounded-[2px] px-2 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] transition-colors duration-150 ${
+                locale === 'it'
+                  ? 'bg-[#f5a623] text-[#23190e]'
+                  : 'text-[#eee7dd] hover:text-[#f5a623]'
+              }`}
+            >
+              IT
+            </button>
+          </div>
+
           <button
             type="button"
             onClick={onOpenCart}
-            className="inline-flex h-10 shrink-0 items-center gap-2 whitespace-nowrap rounded-[3px] bg-[#f5a623] px-4 text-xs font-extrabold uppercase tracking-[0.07em] text-[#23190e] transition-transform duration-150 hover:-translate-y-0.5 hover:bg-[#ffc34f]"
+            aria-label={`${t.myOrder} (${cartCount})`}
+            className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[3px] bg-[#f5a623] px-2.5 text-xs font-extrabold uppercase tracking-[0.07em] text-[#23190e] transition-transform duration-150 hover:-translate-y-0.5 hover:bg-[#ffc34f] sm:gap-2 sm:px-4"
           >
             <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-            <span>{t.myOrder}</span>
+            <span className="hidden sm:inline">{t.myOrder}</span>
             <span className="tabular-nums inline-flex min-w-[20px] items-center justify-center rounded-[2px] bg-[#23190e] px-1.5 py-0.5 text-[11px] font-extrabold text-[#f5a623]">
               {cartCount}
             </span>

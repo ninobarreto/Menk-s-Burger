@@ -9,6 +9,7 @@ import { HeroSection } from './components/HeroSection';
 import { HowToOrderSection } from './components/HowToOrderSection';
 import { LocationAndFooter } from './components/LocationAndFooter';
 import { MenuSection } from './components/MenuSection';
+import { OwnerLoginModal } from './components/OwnerLoginModal';
 import { StoryAndReviewsSection } from './components/StoryAndReviewsSection';
 import { SEED_CATALOG_MAP } from './data/catalog';
 import { useMenksStore } from './hooks/useMenksStore';
@@ -21,6 +22,15 @@ type PendingConfirm =
   | null;
 
 const LOCALE_STORAGE_KEY = 'menks_locale';
+const OWNER_CREDS_STORAGE_KEY = 'menks_owner_creds';
+const OWNER_SESSION_STORAGE_KEY = 'menks_owner_session';
+const DEFAULT_OWNER_USER = 'admin';
+const DEFAULT_OWNER_PASS = 'menks2026';
+
+interface OwnerCredentials {
+  username: string;
+  password: string;
+}
 
 function readInitialLocale(): Locale {
   try {
@@ -30,6 +40,29 @@ function readInitialLocale(): Locale {
     // Ignore storage read errors
   }
   return 'pt';
+}
+
+function readOwnerCredentials(): OwnerCredentials {
+  try {
+    const raw = localStorage.getItem(OWNER_CREDS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as Partial<OwnerCredentials>;
+      if (parsed.username && parsed.password) {
+        return { username: parsed.username, password: parsed.password };
+      }
+    }
+  } catch {
+    // Ignore storage read errors
+  }
+  return { username: DEFAULT_OWNER_USER, password: DEFAULT_OWNER_PASS };
+}
+
+function readOwnerSession(): boolean {
+  try {
+    return sessionStorage.getItem(OWNER_SESSION_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
 }
 
 export default function App() {
@@ -49,6 +82,11 @@ export default function App() {
   } = useMenksStore();
 
   const [locale, setLocale] = useState<Locale>(readInitialLocale);
+  const [ownerCreds, setOwnerCreds] = useState<OwnerCredentials>(
+    readOwnerCredentials
+  );
+  const [isOwner, setIsOwner] = useState<boolean>(readOwnerSession);
+  const [loginOpen, setLoginOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
   const [adminOpen, setAdminOpen] = useState(false);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
@@ -79,21 +117,92 @@ export default function App() {
 
   // Lock body scroll when any overlay is active
   useEffect(() => {
-    const locked = cartOpen || adminOpen || Boolean(pendingConfirm);
+    const locked =
+      cartOpen || adminOpen || loginOpen || Boolean(pendingConfirm);
     document.body.style.overflow = locked ? 'hidden' : '';
     return () => {
       document.body.style.overflow = '';
     };
-  }, [cartOpen, adminOpen, pendingConfirm]);
+  }, [cartOpen, adminOpen, loginOpen, pendingConfirm]);
 
-  const handleOpenAdmin = useCallback((productId?: string) => {
+  const handleOpenAdmin = useCallback(
+    (productId?: string) => {
+      if (!isOwner) {
+        setCartOpen(false);
+        setLoginOpen(true);
+        return;
+      }
+      setCartOpen(false);
+      setEditingProductId(productId ?? null);
+      setAdminOpen(true);
+    },
+    [isOwner]
+  );
+
+  const handleOpenOwnerArea = useCallback(() => {
     setCartOpen(false);
-    setEditingProductId(productId ?? null);
-    setAdminOpen(true);
-  }, []);
+    if (isOwner) {
+      setEditingProductId(null);
+      setAdminOpen(true);
+    } else {
+      setLoginOpen(true);
+    }
+  }, [isOwner]);
+
+  const handleOwnerAuthenticate = useCallback(
+    (username: string, password: string): boolean => {
+      const valid =
+        username.toLowerCase() === ownerCreds.username.toLowerCase() &&
+        password === ownerCreds.password;
+      if (!valid) return false;
+
+      setIsOwner(true);
+      try {
+        sessionStorage.setItem(OWNER_SESSION_STORAGE_KEY, '1');
+      } catch {
+        // Ignore storage write errors
+      }
+      setLoginOpen(false);
+      setEditingProductId(null);
+      setAdminOpen(true);
+      notify(t.ownerAuth.toastLoggedIn, 'success');
+      return true;
+    },
+    [notify, ownerCreds.password, ownerCreds.username, t.ownerAuth.toastLoggedIn]
+  );
+
+  const handleOwnerLogout = useCallback(() => {
+    setIsOwner(false);
+    setAdminOpen(false);
+    setEditingProductId(null);
+    try {
+      sessionStorage.removeItem(OWNER_SESSION_STORAGE_KEY);
+    } catch {
+      // Ignore storage errors
+    }
+    notify(t.ownerAuth.toastLoggedOut, 'info');
+  }, [notify, t.ownerAuth.toastLoggedOut]);
+
+  const handleChangeOwnerPassword = useCallback(
+    (newPassword: string) => {
+      const updated: OwnerCredentials = {
+        username: ownerCreds.username,
+        password: newPassword,
+      };
+      setOwnerCreds(updated);
+      try {
+        localStorage.setItem(OWNER_CREDS_STORAGE_KEY, JSON.stringify(updated));
+      } catch {
+        // Ignore storage write errors
+      }
+      notify(t.ownerAuth.toastPasswordUpdated, 'success');
+    },
+    [notify, ownerCreds.username, t.ownerAuth.toastPasswordUpdated]
+  );
 
   const handleOpenCart = useCallback(() => {
     setAdminOpen(false);
+    setLoginOpen(false);
     setCartOpen(true);
   }, []);
 
@@ -139,19 +248,22 @@ export default function App() {
 
       <main>
         <HeroSection t={t.hero} />
-        <ExperienceSection t={t.experience} />
         <MenuSection
           catalog={catalog}
           locale={locale}
+          isOwner={isOwner}
           t={t.menu}
           onAddToCart={handleAddToCart}
           onOpenAdmin={handleOpenAdmin}
+          onOwnerLogout={handleOwnerLogout}
         />
         <HowToOrderSection t={t.steps} />
         <StoryAndReviewsSection story={t.story} reviews={t.reviews} />
+        <ExperienceSection t={t.experience} />
         <LocationAndFooter
           t={t.location}
-          onOpenAdmin={() => handleOpenAdmin()}
+          isOwner={isOwner}
+          onOpenOwnerArea={handleOpenOwnerArea}
         />
       </main>
 
@@ -178,10 +290,18 @@ export default function App() {
         onNotify={notify}
       />
 
+      <OwnerLoginModal
+        open={loginOpen}
+        t={t.ownerAuth}
+        onClose={() => setLoginOpen(false)}
+        onAuthenticate={handleOwnerAuthenticate}
+      />
+
       <AdminModal
-        open={adminOpen}
+        open={adminOpen && isOwner}
         t={t.admin}
         menuT={t.menu}
+        ownerAuthT={t.ownerAuth}
         editingProductId={editingProductId}
         catalog={catalog}
         onClose={() => {
@@ -193,6 +313,8 @@ export default function App() {
           setPendingConfirm({ kind: 'delete', product })
         }
         onRequestRestoreCatalog={() => setPendingConfirm({ kind: 'restore' })}
+        onChangePassword={handleChangeOwnerPassword}
+        onLogout={handleOwnerLogout}
         onNotify={notify}
       />
 

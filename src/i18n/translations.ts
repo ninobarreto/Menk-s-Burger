@@ -43,6 +43,7 @@ export interface Translations {
     subtitle: string;
     ownerPrompt: string;
     ownerButton: string;
+    ownerLogout: string;
     filterAria: string;
     allCategory: string;
     categories: Record<ProductCategory, string>;
@@ -99,6 +100,7 @@ export interface Translations {
     titleLine2Accent: string;
     lede: string;
     regionLabel: string;
+    regionValue: string;
     whatsappLabel: string;
     hoursLabel: string;
     hoursValue: string;
@@ -111,10 +113,36 @@ export interface Translations {
     footerMenu: string;
     footerHowToOrder: string;
     footerLocation: string;
+    footerOwnerLogin: string;
     footerAdmin: string;
     footerNavAria: string;
     copyrightSuffix: string;
     footerClosing: string;
+    developedByPrefix: string;
+  };
+  ownerAuth: {
+    modalTitle: string;
+    modalSubtitle: string;
+    usernameLabel: string;
+    usernamePlaceholder: string;
+    passwordLabel: string;
+    passwordPlaceholder: string;
+    showPassword: string;
+    hidePassword: string;
+    submit: string;
+    cancel: string;
+    closeAria: string;
+    invalidCredentials: string;
+    logoutButton: string;
+    changePasswordToggle: string;
+    newPasswordLabel: string;
+    confirmPasswordLabel: string;
+    savePasswordButton: string;
+    passwordMinLengthError: string;
+    passwordMismatchError: string;
+    toastLoggedIn: string;
+    toastLoggedOut: string;
+    toastPasswordUpdated: string;
   };
   cart: {
     title: string;
@@ -129,6 +157,7 @@ export interface Translations {
     pickup: string;
     delivery: string;
     pickupNotePrefix: string;
+    pickupRegion: string;
     pickupNoteSuffix: string;
     street: string;
     number: string;
@@ -288,8 +317,9 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       subtitle:
         'Monte seu pedido abaixo e finalize pelo WhatsApp. Consulte sabores do dia e disponibilidade direto com a equipe.',
       ownerPrompt:
-        'Proprietário? Mantenha opções, preços e imagens do cardápio atualizados diretamente neste navegador.',
-      ownerButton: 'Área do proprietário: editar cardápio',
+        'Modo proprietário ativo: edite itens, preços e fotos do cardápio diretamente neste navegador.',
+      ownerButton: 'Editar cardápio',
+      ownerLogout: 'Sair',
       filterAria: 'Filtrar cardápio por categoria',
       allCategory: 'Todos',
       categories: {
@@ -372,15 +402,16 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
     location: {
       eyebrow: 'Onde encontrar',
       titleLine1: 'A gente se fala',
-      titleLine2Prefix: 'em ',
-      titleLine2Accent: 'Maceió.',
+      titleLine2Prefix: 'na ',
+      titleLine2Accent: 'Itália.',
       lede: 'Para endereço, horário de atendimento e disponibilidade de delivery, fale com a equipe pelo WhatsApp.',
       regionLabel: 'Região',
+      regionValue: 'Itália',
       whatsappLabel: 'WhatsApp',
       hoursLabel: 'Horários',
       hoursValue: 'Consulte a equipe',
       cta: 'Chamar no WhatsApp',
-      mapTitle: 'Mapa da região de Maceió, Alagoas',
+      mapTitle: 'Mapa da Itália',
       finalCtaTitle: 'Bateu a vontade?',
       finalCtaBody: 'Escolha no cardápio e mande seu pedido para a Menk’s.',
       finalCtaButton: 'Explorar cardápio',
@@ -388,10 +419,38 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       footerMenu: 'Cardápio',
       footerHowToOrder: 'Como pedir',
       footerLocation: 'Localização',
+      footerOwnerLogin: 'Área do proprietário',
       footerAdmin: 'Admin cardápio',
       footerNavAria: 'Links do rodapé',
       copyrightSuffix: 'Menk’s Burger. Conteúdo sujeito a confirmação pela equipe.',
       footerClosing: 'Feito para quem gosta de comer bem, sem cerimônia.',
+      developedByPrefix: 'Desenvolvido por',
+    },
+    ownerAuth: {
+      modalTitle: 'Acesso do proprietário',
+      modalSubtitle:
+        'Informe seu usuário e senha de administrador para liberar a gestão do cardápio e manutenção dos itens.',
+      usernameLabel: 'Usuário',
+      usernamePlaceholder: 'Digite o usuário',
+      passwordLabel: 'Senha',
+      passwordPlaceholder: 'Digite a senha',
+      showPassword: 'Mostrar senha',
+      hidePassword: 'Ocultar senha',
+      submit: 'Entrar',
+      cancel: 'Cancelar',
+      closeAria: 'Fechar acesso do proprietário',
+      invalidCredentials:
+        'Usuário ou senha inválidos. Apenas o proprietário tem acesso à manutenção do cardápio.',
+      logoutButton: 'Sair do modo proprietário',
+      changePasswordToggle: 'Alterar senha',
+      newPasswordLabel: 'Nova senha (mín. 4 caracteres)',
+      confirmPasswordLabel: 'Confirmar nova senha',
+      savePasswordButton: 'Atualizar senha',
+      passwordMinLengthError: 'A nova senha deve ter pelo menos 4 caracteres.',
+      passwordMismatchError: 'As senhas digitadas não coincidem.',
+      toastLoggedIn: 'Modo proprietário ativado.',
+      toastLoggedOut: 'Sessão do proprietário encerrada.',
+      toastPasswordUpdated: 'Senha do proprietário atualizada neste navegador.',
     },
     cart: {
       title: 'Meu pedido',
@@ -405,7 +464,8 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       deliveryQuestion: 'Como vamos combinar?',
       pickup: 'Buscar no local',
       delivery: 'Delivery',
-      pickupNotePrefix: 'Retirada em ',
+      pickupNotePrefix: 'Retirada na ',
+      pickupRegion: 'Itália',
       pickupNoteSuffix: '. Confirme endereço e horário com a equipe pelo WhatsApp.',
       street: 'Rua / Avenida *',
       number: 'Número *',
@@ -449,7 +509,7 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       warningPrefix: 'Importante:',
       warningBeforeCode: 'alterações ficam salvas apenas neste navegador (',
       warningAfterCode:
-        '). Este painel não possui senha nem sincronização entre dispositivos. Configure preços, descrições e fotos reais antes de divulgar o cardápio.',
+        '). As alterações de produtos e senha não são sincronizadas automaticamente entre dispositivos. Configure preços, descrições e fotos reais antes de divulgar o cardápio.',
       editTitle: 'Editar produto',
       newTitle: 'Novo produto',
       cancelEdit: 'Cancelar edição',
@@ -573,8 +633,9 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       subtitle:
         'Componi il tuo ordine qui sotto e invialo su WhatsApp. Chiedi al team i gusti del giorno e la disponibilità.',
       ownerPrompt:
-        'Sei il titolare? Mantieni piatti, prezzi e foto del menù aggiornati direttamente da questo browser.',
-      ownerButton: 'Area titolare: modifica menù',
+        'Modalità titolare attiva: aggiorna piatti, prezzi e foto del menù direttamente da questo browser.',
+      ownerButton: 'Modifica menù',
+      ownerLogout: 'Esci',
       filterAria: 'Filtra il menù per categoria',
       allCategory: 'Tutti',
       categories: {
@@ -657,15 +718,16 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
     location: {
       eyebrow: 'Dove trovarci',
       titleLine1: 'Ci troviamo',
-      titleLine2Prefix: 'a ',
-      titleLine2Accent: 'Maceió.',
+      titleLine2Prefix: 'in ',
+      titleLine2Accent: 'Italia.',
       lede: 'Per indirizzo, orari di apertura e copertura consegne, scrivi al nostro team su WhatsApp.',
       regionLabel: 'Zona',
+      regionValue: 'Italia',
       whatsappLabel: 'WhatsApp',
       hoursLabel: 'Orari',
       hoursValue: 'Chiedi al team',
       cta: 'Scrivici su WhatsApp',
-      mapTitle: 'Mappa della zona di Maceió, Alagoas',
+      mapTitle: 'Mappa dell’Italia',
       finalCtaTitle: 'Ti è venuta fame?',
       finalCtaBody: 'Scegli dal menù e manda il tuo ordine a Menk’s.',
       finalCtaButton: 'Esplora il menù',
@@ -673,10 +735,38 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       footerMenu: 'Menù',
       footerHowToOrder: 'Come ordinare',
       footerLocation: 'Dove siamo',
+      footerOwnerLogin: 'Area titolare',
       footerAdmin: 'Gestione menù',
       footerNavAria: 'Link del piè di pagina',
       copyrightSuffix: 'Menk’s Burger. Contenuti soggetti a conferma dal team.',
       footerClosing: 'Fatto per chi ama mangiare bene, senza formalità.',
+      developedByPrefix: 'Sviluppato da',
+    },
+    ownerAuth: {
+      modalTitle: 'Accesso titolare',
+      modalSubtitle:
+        'Inserisci nome utente e password di amministratore per accedere alla gestione del menù e dei prodotti.',
+      usernameLabel: 'Utente',
+      usernamePlaceholder: 'Inserisci utente',
+      passwordLabel: 'Password',
+      passwordPlaceholder: 'Inserisci password',
+      showPassword: 'Mostra password',
+      hidePassword: 'Nascondi password',
+      submit: 'Accedi',
+      cancel: 'Annulla',
+      closeAria: 'Chiudi accesso titolare',
+      invalidCredentials:
+        'Utente o password non validi. Solo il titolare può accedere alla gestione del menù.',
+      logoutButton: 'Esci dalla modalità titolare',
+      changePasswordToggle: 'Cambia password',
+      newPasswordLabel: 'Nuova password (min. 4 caratteri)',
+      confirmPasswordLabel: 'Conferma nuova password',
+      savePasswordButton: 'Aggiorna password',
+      passwordMinLengthError: 'La nuova password deve avere almeno 4 caratteri.',
+      passwordMismatchError: 'Le password inserite non coincidono.',
+      toastLoggedIn: 'Modalità titolare attivata.',
+      toastLoggedOut: 'Sessione titolare terminata.',
+      toastPasswordUpdated: 'Password del titolare aggiornata in questo browser.',
     },
     cart: {
       title: 'Il mio ordine',
@@ -690,7 +780,8 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       deliveryQuestion: 'Come preferisci riceverlo?',
       pickup: 'Ritiro in sede',
       delivery: 'Consegna',
-      pickupNotePrefix: 'Ritiro a ',
+      pickupNotePrefix: 'Ritiro in ',
+      pickupRegion: 'Italia',
       pickupNoteSuffix: '. Conferma indirizzo e orario con il team su WhatsApp.',
       street: 'Via / Viale *',
       number: 'Civico *',
@@ -736,7 +827,7 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       warningPrefix: 'Importante:',
       warningBeforeCode: 'le modifiche vengono salvate solo in questo browser (',
       warningAfterCode:
-        '). Questo pannello non richiede password e non si sincronizza tra dispositivi. Imposta prezzi, descrizioni e foto reali prima di condividere il menù.',
+        '). Le modifiche ai prodotti e alla password non si sincronizzano automaticamente tra dispositivi. Imposta prezzi, descrizioni e foto reali prima di condividere il menù.',
       editTitle: 'Modifica prodotto',
       newTitle: 'Nuovo prodotto',
       cancelEdit: 'Annulla modifica',

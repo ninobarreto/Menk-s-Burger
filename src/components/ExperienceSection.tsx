@@ -37,8 +37,8 @@ export function ExperienceSection({ t }: ExperienceSectionProps) {
           </a>
         </div>
 
-        {/* Right 2x2 Asymmetric Grid */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Right 2x2 Asymmetric Grid (hidden on mobile per user request) */}
+        <div className="hidden gap-4 md:grid md:grid-cols-2">
           {t.cards.map(({ num, title, body }, idx) => {
             const Icon = CARD_ICONS[idx] ?? Flame;
             return (

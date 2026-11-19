@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { ArrowUpRight, Check, Minus, Pencil, Plus, UtensilsCrossed } from 'lucide-react';
+import { ArrowUpRight, Check, LogOut, Minus, Pencil, Plus, UtensilsCrossed } from 'lucide-react';
 import {
   BRAND_IMAGES,
   formatMoney,
@@ -15,9 +15,11 @@ import type { Locale, Product, ProductCategory } from '../types';
 interface MenuSectionProps {
   catalog: Product[];
   locale: Locale;
+  isOwner: boolean;
   t: Translations['menu'];
   onAddToCart: (productId: string, qty: number) => void;
   onOpenAdmin: (productId?: string) => void;
+  onOwnerLogout: () => void;
 }
 
 type CategoryFilter = 'Todos' | ProductCategory;
@@ -25,6 +27,7 @@ type CategoryFilter = 'Todos' | ProductCategory;
 interface ProductCardProps {
   product: Product;
   locale: Locale;
+  isOwner: boolean;
   t: Translations['menu'];
   onAddToCart: (productId: string, qty: number) => void;
   onEdit: (productId: string) => void;
@@ -33,6 +36,7 @@ interface ProductCardProps {
 function ProductCard({
   product,
   locale,
+  isOwner,
   t,
   onAddToCart,
   onEdit,
@@ -88,16 +92,18 @@ function ProductCard({
           </span>
         )}
 
-        {/* Quick Edit button for Owner */}
-        <button
-          type="button"
-          onClick={() => onEdit(product.id)}
-          aria-label={`${t.editProduct}: ${localized.name}`}
-          title={t.editProduct}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#171514]/85 text-white opacity-90 transition-opacity duration-150 hover:bg-[#171514] hover:text-[#f5a623] sm:opacity-0 sm:group-hover:opacity-100 sm:focus-visible:opacity-100"
-        >
-          <Pencil className="h-4 w-4" aria-hidden="true" />
-        </button>
+        {/* Quick Edit button visible only when Owner is logged in */}
+        {isOwner && (
+          <button
+            type="button"
+            onClick={() => onEdit(product.id)}
+            aria-label={`${t.editProduct}: ${localized.name}`}
+            title={t.editProduct}
+            className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full bg-[#171514]/85 text-white opacity-95 transition-opacity duration-150 hover:bg-[#171514] hover:text-[#f5a623]"
+          >
+            <Pencil className="h-4 w-4" aria-hidden="true" />
+          </button>
+        )}
       </div>
 
       {/* Card Body */}
@@ -186,9 +192,11 @@ function ProductCard({
 export function MenuSection({
   catalog,
   locale,
+  isOwner,
   t,
   onAddToCart,
   onOpenAdmin,
+  onOwnerLogout,
 }: MenuSectionProps) {
   const [activeCategory, setActiveCategory] = useState<CategoryFilter>('Todos');
 
@@ -228,20 +236,32 @@ export function MenuSection({
           </p>
         </div>
 
-        {/* Owner Management Bar */}
-        <div className="mt-7 flex flex-col items-start justify-between gap-4 rounded-[3px] border border-[#4a4036] bg-[#171514] px-5 py-4 sm:flex-row sm:items-center">
-          <p className="text-xs leading-relaxed text-[#c4b8a9]">
-            {t.ownerPrompt}
-          </p>
-          <button
-            type="button"
-            onClick={() => onOpenAdmin()}
-            className="inline-flex h-10 shrink-0 items-center gap-1.5 whitespace-nowrap rounded-[3px] border border-white/40 bg-[#211d1a] px-4 text-[11px] font-extrabold uppercase tracking-[0.07em] text-white transition-colors duration-150 hover:border-[#f5a623] hover:text-[#f5a623]"
-          >
-            <span>{t.ownerButton}</span>
-            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        </div>
+        {/* Owner Management Bar — visible only when authenticated as owner */}
+        {isOwner && (
+          <div className="mt-7 flex flex-col items-stretch justify-between gap-3 rounded-[3px] border border-[#f5a623]/40 bg-[#171514] p-4 sm:flex-row sm:items-center sm:px-5">
+            <p className="min-w-0 text-xs leading-relaxed text-[#d9cebf]">
+              {t.ownerPrompt}
+            </p>
+            <div className="flex flex-wrap items-center gap-2 sm:shrink-0">
+              <button
+                type="button"
+                onClick={() => onOpenAdmin()}
+                className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-[3px] bg-[#f5a623] px-4 text-[11px] font-extrabold uppercase tracking-[0.07em] text-[#23190e] transition-colors duration-150 hover:bg-[#ffc34f] sm:flex-none"
+              >
+                <span>{t.ownerButton}</span>
+                <ArrowUpRight className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={onOwnerLogout}
+                className="inline-flex h-10 items-center justify-center gap-1.5 rounded-[3px] border border-white/25 bg-[#211d1a] px-3.5 text-[11px] font-extrabold uppercase tracking-[0.07em] text-[#eee7dd] transition-colors duration-150 hover:border-[#f5a623] hover:text-[#f5a623]"
+              >
+                <LogOut className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                <span>{t.ownerLogout}</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Category Filter Tabs */}
         <div
@@ -291,6 +311,7 @@ export function MenuSection({
                 key={item.id}
                 product={item}
                 locale={locale}
+                isOwner={isOwner}
                 t={t}
                 onAddToCart={onAddToCart}
                 onEdit={(id) => onOpenAdmin(id)}
@@ -311,13 +332,15 @@ export function MenuSection({
               >
                 {t.viewAll}
               </button>
-              <button
-                type="button"
-                onClick={() => onOpenAdmin()}
-                className="h-10 rounded-[3px] border border-white/30 px-5 text-xs font-extrabold uppercase tracking-[0.07em] text-white hover:border-[#f5a623] hover:text-[#f5a623]"
-              >
-                {t.createProduct}
-              </button>
+              {isOwner && (
+                <button
+                  type="button"
+                  onClick={() => onOpenAdmin()}
+                  className="h-10 rounded-[3px] border border-white/30 px-5 text-xs font-extrabold uppercase tracking-[0.07em] text-white hover:border-[#f5a623] hover:text-[#f5a623]"
+                >
+                  {t.createProduct}
+                </button>
+              )}
             </div>
           </div>
         )}

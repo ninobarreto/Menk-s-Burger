@@ -309,7 +309,7 @@ export function CartDrawer({
                 {!isDelivery ? (
                   <p className="mt-2.5 rounded-[3px] border border-[#dcd4c8] bg-white/70 p-3 text-xs leading-relaxed text-[#5c544c]">
                     {t.pickupNotePrefix}
-                    <strong>Maceió — AL</strong>
+                    <strong>{t.pickupRegion}</strong>
                     {t.pickupNoteSuffix}
                   </p>
                 ) : (
