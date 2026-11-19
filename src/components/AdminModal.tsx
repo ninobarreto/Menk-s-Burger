@@ -18,7 +18,7 @@ import {
 } from '../data/catalog';
 import type { Translations } from '../i18n/translations';
 import type { Locale, OrderRecord, Product, ProductCategory } from '../types';
-import { CashierPanel } from './CashierPanel';
+import { CashierPanel, type OccupiedTableInfo } from './CashierPanel';
 
 interface AdminModalProps {
   open: boolean;
@@ -30,11 +30,13 @@ interface AdminModalProps {
   editingProductId: string | null;
   catalog: Product[];
   orders: OrderRecord[];
+  occupiedTables: Record<string, OccupiedTableInfo>;
   onClose: () => void;
   onSaveProduct: (product: Product) => void;
   onRequestDeleteProduct: (product: Product) => void;
   onRequestRestoreCatalog: () => void;
   onToggleOrderPaid: (order: OrderRecord) => void;
+  onCloseTable: (tableNumber: string) => void;
   onRequestDeleteOrder: (order: OrderRecord) => void;
   onChangePassword: (newPassword: string) => void;
   onLogout: () => void;
@@ -51,11 +53,13 @@ export function AdminModal({
   editingProductId,
   catalog,
   orders,
+  occupiedTables,
   onClose,
   onSaveProduct,
   onRequestDeleteProduct,
   onRequestRestoreCatalog,
   onToggleOrderPaid,
+  onCloseTable,
   onRequestDeleteOrder,
   onChangePassword,
   onLogout,
@@ -390,8 +394,10 @@ export function AdminModal({
             <CashierPanel
               locale={locale}
               orders={orders}
+              occupiedTables={occupiedTables}
               t={cashierT}
               onTogglePaid={onToggleOrderPaid}
+              onCloseTable={onCloseTable}
               onRequestDeleteOrder={onRequestDeleteOrder}
               onNotify={onNotify}
             />

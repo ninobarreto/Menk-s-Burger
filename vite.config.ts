@@ -5,10 +5,26 @@ import path from 'path';
 import {defineConfig} from 'vite';
 
 export default defineConfig(() => {
+  const siteOrigin = (
+    process.env.VITE_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL
+      ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+      : '') ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+    process.env.APP_URL ||
+    ''
+  ).replace(/\/+$/, '');
+
   return {
     plugins: [
       react(),
       tailwindcss(),
+      {
+        name: 'inject-seo-origin',
+        transformIndexHtml(html) {
+          return html.replaceAll('%SITE_ORIGIN%', siteOrigin);
+        },
+      },
       // Copies src/assets into dist/ so root-relative URLs like
       // "/src/assets/images/..." (e.g. generate_image output) still resolve
       // in production builds. Do not remove.

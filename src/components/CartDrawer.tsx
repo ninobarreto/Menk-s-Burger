@@ -4,6 +4,7 @@ import {
   Check,
   Copy,
   ExternalLink,
+  Lock,
   Minus,
   Plus,
   ShoppingBag,
@@ -16,6 +17,8 @@ import {
   formatMoney,
   formatPhoneMask,
   isValidEmail,
+  normalizeTableNumber,
+  RESTAURANT_TABLES,
   SEED_CATALOG_MAP,
 } from '../data/catalog';
 import {
@@ -38,6 +41,17 @@ interface CartDrawerProps {
   catalog: Product[];
   cartTotal: number;
   customer: CustomerInfo;
+  occupiedTables: Record<
+    string,
+    {
+      tableNumber: string;
+      total: number;
+      orderCount: number;
+      customerName: string;
+      openedAt: string;
+      orderIds: string[];
+    }
+  >;
   onClose: () => void;
   onChangeQty: (productId: string, delta: number) => void;
   onRemoveItem: (productId: string) => void;
@@ -55,6 +69,7 @@ export function CartDrawer({
   catalog,
   cartTotal,
   customer,
+  occupiedTables,
   onClose,
   onChangeQty,
   onRemoveItem,
@@ -69,6 +84,7 @@ export function CartDrawer({
     protocol: string;
     message: string;
     url: string;
+    tableNumber?: string;
   } | null>(null);
   const [copied, setCopied] = useState(false);
 
@@ -93,6 +109,21 @@ export function CartDrawer({
 
   const isTable = customer.mode === 'mesa';
   const isDelivery = customer.mode === 'delivery';
+  const normalizedSelectedTable = normalizeTableNumber(customer.tableNumber);
+
+  const isTableLockedForNewOrder = (tableKey: string) => {
+    const occupied = occupiedTables[tableKey];
+    if (!occupied) return false;
+    // Allow updating the exact same order just generated in this drawer
+    if (
+      orderPreview?.protocol &&
+      occupied.orderIds.length === 1 &&
+      occupied.orderIds[0] === orderPreview.protocol
+    ) {
+      return false;
+    }
+    return true;
+  };
 
   const handleGenerateOrder = () => {
     if (cart.length === 0) {
@@ -101,8 +132,12 @@ export function CartDrawer({
     }
 
     if (isTable) {
-      if (!customer.tableNumber.trim()) {
+      if (!normalizedSelectedTable) {
         setValidationError(t.errTable);
+        return;
+      }
+      if (isTableLockedForNewOrder(normalizedSelectedTable)) {
+        setValidationError(t.errTableOccupied(normalizedSelectedTable));
         return;
       }
       if (!customer.customerName.trim()) {
@@ -150,10 +185,11 @@ export function CartDrawer({
       protocol: payload.protocol,
       message: payload.message,
       url: payload.url,
+      tableNumber: isTable ? normalizedSelectedTable : undefined,
     });
     if (isTable) {
       onNotify(
-        t.toastTableSaved(customer.tableNumber.trim(), payload.protocol),
+        t.toastTableSaved(normalizedSelectedTable, payload.protocol),
         'success'
       );
     } else {
@@ -362,24 +398,91 @@ export function CartDrawer({
                 </div>
 
                 {isTable ? (
-                  <div className="mt-3 rounded-[3px] border border-[#f5a623]/60 bg-white/85 p-3.5">
-                    <label
-                      htmlFor="tableNumber"
-                      className="mb-1 block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#574f47]"
-                    >
-                      {t.tableNumberLabel}
-                    </label>
-                    <input
-                      id="tableNumber"
-                      type="text"
-                      maxLength={24}
-                      placeholder={t.tableNumberPlaceholder}
-                      value={customer.tableNumber}
-                      onChange={(e) =>
-                        onUpdateCustomer({ tableNumber: e.target.value })
-                      }
-                      className="h-10 w-full rounded-[2px] border border-[#d2c9bc] bg-white px-3 text-sm font-bold text-[#211d1a]"
-                    />
+                  <div className="mt-3 space-y-3 rounded-[3px] border border-[#f5a623]/60 bg-white/90 p-3.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <span className="text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#574f47]">
+                        {t.tableSelectTitle}
+                      </span>
+                      <div className="flex items-center gap-2.5 text-[10px] font-bold uppercase tracking-[0.06em]">
+                        <span className="inline-flex items-center gap-1 text-[#456614]">
+                          <span className="h-2 w-2 rounded-full bg-[#638b25]" />
+                          {t.tableFree}
+                        </span>
+                        <span className="inline-flex items-center gap-1 text-[#a23e1e]">
+                          <Lock className="h-2.5 w-2.5" aria-hidden="true" />
+                          {t.tableOccupied}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {RESTAURANT_TABLES.map((num) => {
+                        const locked = isTableLockedForNewOrder(num);
+                        const selected = normalizedSelectedTable === num && !locked;
+                        return (
+                          <button
+                            key={num}
+                            type="button"
+                            disabled={locked}
+                            onClick={() => {
+                              onUpdateCustomer({ tableNumber: num });
+                              setValidationError(null);
+                            }}
+                            title={
+                              locked
+                                ? t.errTableOccupied(num)
+                                : `${t.table} ${num} — ${t.tableFree}`
+                            }
+                            className={`flex flex-col items-center justify-center rounded-[2px] border py-2 text-center transition-colors ${
+                              locked
+                                ? 'cursor-not-allowed border-[#a23e1e]/30 bg-[#a23e1e]/10 text-[#8f3317]'
+                                : selected
+                                  ? 'border-[#211d1a] bg-[#211d1a] text-[#f5a623]'
+                                  : 'border-[#d2c9bc] bg-[#fbf9f5] text-[#211d1a] hover:border-[#f5a623] hover:bg-[#fdf5e6]'
+                            }`}
+                          >
+                            <span className="font-display tabular-nums text-lg leading-none">
+                              {num}
+                            </span>
+                            <span className="mt-0.5 inline-flex items-center gap-0.5 text-[9px] font-extrabold uppercase tracking-[0.05em]">
+                              {locked ? (
+                                <>
+                                  <Lock className="h-2.5 w-2.5" aria-hidden="true" />
+                                  <span>{t.tableOccupied}</span>
+                                </>
+                              ) : (
+                                <span>{t.tableFree}</span>
+                              )}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                    <div>
+                      <label
+                        htmlFor="tableNumber"
+                        className="mb-1 block text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#6e655b]"
+                      >
+                        {t.tableCustomLabel}
+                      </label>
+                      <input
+                        id="tableNumber"
+                        type="text"
+                        maxLength={24}
+                        placeholder={t.tableNumberPlaceholder}
+                        value={customer.tableNumber}
+                        onChange={(e) => {
+                          onUpdateCustomer({ tableNumber: e.target.value });
+                          setValidationError(null);
+                        }}
+                        className="h-9 w-full rounded-[2px] border border-[#d2c9bc] bg-white px-3 text-xs font-bold text-[#211d1a]"
+                      />
+                    </div>
+
+                    <p className="text-[11px] leading-relaxed text-[#6b5d4e]">
+                      {t.tableLockNotice}
+                    </p>
                   </div>
                 ) : !isDelivery ? (
                   <p className="mt-2.5 rounded-[3px] border border-[#dcd4c8] bg-white/70 p-3 text-xs leading-relaxed text-[#5c544c]">
@@ -658,6 +761,7 @@ export function CartDrawer({
                     type="button"
                     onClick={() => {
                       onClearCart();
+                      onUpdateCustomer({ tableNumber: '' });
                       setOrderPreview(null);
                     }}
                     className="mt-2 inline-flex h-9 w-full items-center justify-center rounded-[3px] border border-[#d2c9bc] bg-[#f6f1e8] px-4 text-[11px] font-extrabold uppercase tracking-[0.07em] text-[#211d1a] transition-colors hover:bg-[#ebe3d7]"

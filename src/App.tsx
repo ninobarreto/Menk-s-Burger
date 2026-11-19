@@ -72,6 +72,7 @@ export default function App() {
     cart,
     customer,
     orders,
+    occupiedTables,
     cartCount,
     cartTotal,
     addToCart,
@@ -84,6 +85,7 @@ export default function App() {
     updateCustomer,
     recordOrder,
     toggleOrderPaid,
+    closeTableAccount,
     deleteOrder,
   } = useMenksStore();
 
@@ -255,6 +257,14 @@ export default function App() {
     [notify, t.cashier, toggleOrderPaid]
   );
 
+  const handleCloseTable = useCallback(
+    (tableNumber: string) => {
+      closeTableAccount(tableNumber);
+      notify(t.cashier.toastTableClosed(tableNumber), 'success');
+    },
+    [closeTableAccount, notify, t.cashier]
+  );
+
   const handleOpenCart = useCallback(() => {
     setAdminOpen(false);
     setLoginOpen(false);
@@ -341,6 +351,7 @@ export default function App() {
         catalog={catalog}
         cartTotal={cartTotal}
         customer={customer}
+        occupiedTables={occupiedTables}
         onClose={() => setCartOpen(false)}
         onChangeQty={changeCartQty}
         onRemoveItem={removeFromCart}
@@ -370,6 +381,7 @@ export default function App() {
         editingProductId={editingProductId}
         catalog={catalog}
         orders={orders}
+        occupiedTables={occupiedTables}
         onClose={() => {
           setAdminOpen(false);
           setEditingProductId(null);
@@ -381,6 +393,7 @@ export default function App() {
         }
         onRequestRestoreCatalog={() => setPendingConfirm({ kind: 'restore' })}
         onToggleOrderPaid={handleToggleOrderPaid}
+        onCloseTable={handleCloseTable}
         onRequestDeleteOrder={(order) =>
           setPendingConfirm({ kind: 'deleteOrder', order })
         }

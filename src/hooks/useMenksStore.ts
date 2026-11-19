@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { DEFAULT_CUSTOMER, SEED_CATALOG } from '../data/catalog';
+import {
+  DEFAULT_CUSTOMER,
+  normalizeTableNumber,
+  SEED_CATALOG,
+} from '../data/catalog';
 import type { CartItem, CustomerInfo, OrderRecord, Product } from '../types';
 
 const STORAGE_KEYS = {
@@ -189,6 +193,64 @@ export function useMenksStore() {
     );
   }, []);
 
+  const occupiedTables = useMemo(() => {
+    const map: Record<
+      string,
+      {
+        tableNumber: string;
+        total: number;
+        orderCount: number;
+        customerName: string;
+        openedAt: string;
+        orderIds: string[];
+      }
+    > = {};
+
+    for (const order of orders) {
+      if (order.mode !== 'mesa' || order.paymentStatus !== 'pendente') continue;
+      const key = normalizeTableNumber(order.tableNumber);
+      if (!key) continue;
+      const existing = map[key];
+      if (existing) {
+        existing.total += order.total;
+        existing.orderCount += 1;
+        existing.orderIds.push(order.id);
+      } else {
+        map[key] = {
+          tableNumber: key,
+          total: order.total,
+          orderCount: 1,
+          customerName: order.customerName,
+          openedAt: order.createdAt,
+          orderIds: [order.id],
+        };
+      }
+    }
+    return map;
+  }, [orders]);
+
+  const closeTableAccount = useCallback((tableNumber: string) => {
+    const target = normalizeTableNumber(tableNumber);
+    if (!target) return;
+    const nowIso = new Date().toISOString();
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (
+          o.mode === 'mesa' &&
+          o.paymentStatus === 'pendente' &&
+          normalizeTableNumber(o.tableNumber) === target
+        ) {
+          return {
+            ...o,
+            paymentStatus: 'pago',
+            paidAt: nowIso,
+          };
+        }
+        return o;
+      })
+    );
+  }, []);
+
   const deleteOrder = useCallback((orderId: string) => {
     setOrders((prev) => prev.filter((o) => o.id !== orderId));
   }, []);
@@ -198,6 +260,7 @@ export function useMenksStore() {
     cart: normalizedCart,
     customer,
     orders,
+    occupiedTables,
     cartCount,
     cartTotal,
     addToCart,
@@ -210,6 +273,7 @@ export function useMenksStore() {
     updateCustomer,
     recordOrder,
     toggleOrderPaid,
+    closeTableAccount,
     deleteOrder,
   };
 }

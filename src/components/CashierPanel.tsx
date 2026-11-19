@@ -6,19 +6,32 @@ import {
   Clock,
   Copy,
   Download,
+  Lock,
   RotateCcw,
   Trash2,
+  Unlock,
   UtensilsCrossed,
 } from 'lucide-react';
-import { formatMoney, getLocalDateKey } from '../data/catalog';
+import { formatMoney, getLocalDateKey, RESTAURANT_TABLES } from '../data/catalog';
 import type { Translations } from '../i18n/translations';
 import type { Locale, OrderMode, OrderRecord } from '../types';
+
+export interface OccupiedTableInfo {
+  tableNumber: string;
+  total: number;
+  orderCount: number;
+  customerName: string;
+  openedAt: string;
+  orderIds: string[];
+}
 
 interface CashierPanelProps {
   locale: Locale;
   orders: OrderRecord[];
+  occupiedTables: Record<string, OccupiedTableInfo>;
   t: Translations['cashier'];
   onTogglePaid: (order: OrderRecord) => void;
+  onCloseTable: (tableNumber: string) => void;
   onRequestDeleteOrder: (order: OrderRecord) => void;
   onNotify: (text: string, tone?: 'success' | 'info' | 'error') => void;
 }
@@ -28,8 +41,10 @@ type StatusFilter = 'all' | 'pendente' | 'pago';
 export function CashierPanel({
   locale,
   orders,
+  occupiedTables,
   t,
   onTogglePaid,
+  onCloseTable,
   onRequestDeleteOrder,
   onNotify,
 }: CashierPanelProps) {
@@ -309,6 +324,83 @@ export function CashierPanel({
               {t.avgTicket}: {formatMoney(stats.avgTicket)}
             </span>
           </div>
+        </div>
+      </div>
+
+      {/* Live Tables Occupancy & Release Board */}
+      <div className="rounded-[3px] border border-[#e2dad0] bg-white p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 className="font-display text-xl uppercase leading-none text-[#211d1a]">
+              {t.tablesBoardTitle}
+            </h3>
+            <p className="mt-1 text-xs text-[#6e655b]">{t.tablesBoardSubtitle}</p>
+          </div>
+          <span className="tabular-nums rounded-[2px] bg-[#211d1a] px-2.5 py-1 text-[11px] font-extrabold uppercase tracking-[0.06em] text-[#f5a623]">
+            {Object.keys(occupiedTables).length} {t.tableOccupied}
+          </span>
+        </div>
+
+        {/* Occupied Tables Highlighted with 1-Click Close & Release */}
+        {Object.values(occupiedTables).length > 0 && (
+          <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {Object.values(occupiedTables).map((tbl) => (
+              <div
+                key={tbl.tableNumber}
+                className="flex flex-col justify-between gap-3 rounded-[3px] border border-[#f5a623] bg-[#fdf5e6] p-3"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="inline-flex items-center gap-1 rounded-[2px] bg-[#a23e1e] px-2 py-0.5 text-[10px] font-extrabold uppercase tracking-[0.06em] text-white">
+                      <Lock className="h-2.5 w-2.5" aria-hidden="true" />
+                      <span>
+                        {t.tablePrefix} {tbl.tableNumber} · {t.tableOccupied}
+                      </span>
+                    </span>
+                    <strong className="mt-1.5 block truncate text-xs font-bold text-[#211d1a]">
+                      {tbl.customerName}
+                    </strong>
+                  </div>
+                  <strong className="font-display tabular-nums shrink-0 text-xl leading-none text-[#a23e1e]">
+                    {formatMoney(tbl.total)}
+                  </strong>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => onCloseTable(tbl.tableNumber)}
+                  className="inline-flex h-8 w-full items-center justify-center gap-1.5 rounded-[2px] bg-[#638b25] px-3 text-[11px] font-extrabold uppercase tracking-[0.06em] text-white transition-colors hover:bg-[#6f9c2a]"
+                >
+                  <Unlock className="h-3.5 w-3.5" aria-hidden="true" />
+                  <span>{t.closeTableButton}</span>
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Quick Overview of All 12 Standard Tables */}
+        <div className="mt-3 grid grid-cols-4 gap-1.5 sm:grid-cols-6 lg:grid-cols-12">
+          {RESTAURANT_TABLES.map((num) => {
+            const occupied = Boolean(occupiedTables[num]);
+            return (
+              <div
+                key={num}
+                className={`rounded-[2px] border px-1.5 py-1.5 text-center ${
+                  occupied
+                    ? 'border-[#a23e1e]/40 bg-[#a23e1e]/12 text-[#8f3317]'
+                    : 'border-[#d9d2c7] bg-[#f8f5ef] text-[#456614]'
+                }`}
+              >
+                <span className="font-display tabular-nums block text-base leading-none">
+                  {num}
+                </span>
+                <span className="mt-0.5 block text-[9px] font-extrabold uppercase tracking-[0.04em]">
+                  {occupied ? t.tableOccupied : t.tableFree}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 

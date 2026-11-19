@@ -159,6 +159,11 @@ export interface Translations {
     delivery: string;
     tableNumberLabel: string;
     tableNumberPlaceholder: string;
+    tableSelectTitle: string;
+    tableCustomLabel: string;
+    tableFree: string;
+    tableOccupied: string;
+    tableLockNotice: string;
     tablePayTitle: string;
     tablePayBody: string;
     pickupNotePrefix: string;
@@ -185,6 +190,7 @@ export interface Translations {
     pixAgreeText: string;
     errEmptyCart: string;
     errTable: string;
+    errTableOccupied: (table: string) => string;
     errTableName: string;
     errContact: string;
     errAddress: string;
@@ -271,6 +277,12 @@ export interface Translations {
     modePickup: string;
     modeDelivery: string;
     tablePrefix: string;
+    tablesBoardTitle: string;
+    tablesBoardSubtitle: string;
+    tableFree: string;
+    tableOccupied: string;
+    closeTableButton: string;
+    toastTableClosed: (table: string) => string;
     statusPaid: string;
     statusPendingTable: string;
     statusPendingPix: string;
@@ -520,10 +532,16 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       pickup: 'Buscar no local',
       delivery: 'Delivery',
       tableNumberLabel: 'Número / identificação da mesa *',
-      tableNumberPlaceholder: 'Ex.: 01, 05, Varanda 2',
+      tableNumberPlaceholder: 'Ex.: Varanda 1, Área externa',
+      tableSelectTitle: 'Informe a mesa onde está sentado *',
+      tableCustomLabel: 'Ou informe outra mesa',
+      tableFree: 'Livre',
+      tableOccupied: 'Ocupada',
+      tableLockNotice:
+        'A mesa escolhida ficará ocupada e só será liberada após o pagamento final no fechamento da conta.',
       tablePayTitle: 'Pagamento na mesa (ao final do atendimento)',
       tablePayBody:
-        'O pedido fica registrado no controle da casa e na sua mesa. O pagamento será realizado somente ao final do serviço, direto na mesa.',
+        'O pedido fica registrado na sua mesa e no controle da casa. A mesa só é liberada após o pagamento final no fechamento da conta.',
       pickupNotePrefix: 'Retirada na ',
       pickupRegion: 'Itália',
       pickupNoteSuffix: '. Confirme endereço e horário com a equipe pelo WhatsApp.',
@@ -549,7 +567,9 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       pixAgreeText:
         'Estou ciente de que o pagamento será via PIX e que o pedido só será retirado/entregue mediante apresentação do comprovante de pagamento.',
       errEmptyCart: 'Adicione itens com preço cadastrado antes de continuar.',
-      errTable: 'Informe o número ou identificação da mesa.',
+      errTable: 'Selecione ou informe a mesa onde você está sentado.',
+      errTableOccupied: (table) =>
+        `A Mesa ${table} está ocupada e só será liberada após o pagamento final no fechamento da conta.`,
       errTableName: 'Informe o seu nome para identificar o pedido na mesa.',
       errContact:
         'Confira seu nome completo, WhatsApp com DDD (10 ou 11 dígitos) e e-mail válido.',
@@ -643,6 +663,14 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       modePickup: 'Retirada',
       modeDelivery: 'Delivery',
       tablePrefix: 'Mesa',
+      tablesBoardTitle: 'Controle de mesas',
+      tablesBoardSubtitle:
+        'Mesas ocupadas permanecem bloqueadas até a confirmação do pagamento final.',
+      tableFree: 'Livre',
+      tableOccupied: 'Ocupada',
+      closeTableButton: 'Fechar conta e liberar',
+      toastTableClosed: (table) =>
+        `Conta da Mesa ${table} paga e mesa liberada para novos clientes.`,
       statusPaid: 'Pago',
       statusPendingTable: 'Em aberto · Pagar na mesa',
       statusPendingPix: 'Aguardando confirmação PIX',
@@ -893,10 +921,16 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       pickup: 'Ritiro in sede',
       delivery: 'Consegna',
       tableNumberLabel: 'Numero / nome del tavolo *',
-      tableNumberPlaceholder: 'Es.: 01, 05, Terrazza 2',
+      tableNumberPlaceholder: 'Es.: Terrazza 1, Esterno',
+      tableSelectTitle: 'Indica il tavolo dove sei seduto *',
+      tableCustomLabel: 'Oppure indica un altro tavolo',
+      tableFree: 'Libero',
+      tableOccupied: 'Occupato',
+      tableLockNotice:
+        'Il tavolo scelto resterà occupato e sarà liberato solo dopo il pagamento finale alla chiusura del conto.',
       tablePayTitle: 'Pagamento al tavolo (a fine servizio)',
       tablePayBody:
-        'L’ordine viene registrato sul tuo tavolo e in cassa. Il pagamento avverrà solo al termine del servizio, direttamente al tavolo.',
+        'L’ordine viene registrato sul tuo tavolo e in cassa. Il tavolo sarà liberato solo dopo il pagamento finale alla chiusura del conto.',
       pickupNotePrefix: 'Ritiro in ',
       pickupRegion: 'Italia',
       pickupNoteSuffix: '. Conferma indirizzo e orario con il team su WhatsApp.',
@@ -923,7 +957,9 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       pixAgreeText:
         'Confermo di essere consapevole che il pagamento avviene via PIX e che l’ordine sarà consegnato/ritirato solo dopo l’invio della ricevuta.',
       errEmptyCart: 'Aggiungi prodotti con prezzo prima di continuare.',
-      errTable: 'Inserisci il numero o il nome del tavolo.',
+      errTable: 'Seleziona o indica il tavolo dove sei seduto.',
+      errTableOccupied: (table) =>
+        `Il Tavolo ${table} è occupato e sarà liberato solo dopo il pagamento finale alla chiusura del conto.`,
       errTableName: 'Inserisci il tuo nome per identificare l’ordine al tavolo.',
       errContact:
         'Controlla nome completo, WhatsApp con prefisso (10 o 11 cifre) ed e-mail valida.',
@@ -1018,6 +1054,14 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       modePickup: 'Ritiro',
       modeDelivery: 'Consegna',
       tablePrefix: 'Tavolo',
+      tablesBoardTitle: 'Controllo tavoli',
+      tablesBoardSubtitle:
+        'I tavoli occupati restano bloccati fino alla conferma del pagamento finale.',
+      tableFree: 'Libero',
+      tableOccupied: 'Occupato',
+      closeTableButton: 'Chiudi conto e libera',
+      toastTableClosed: (table) =>
+        `Conto del Tavolo ${table} saldato e tavolo liberato per nuovi clienti.`,
       statusPaid: 'Pagato',
       statusPendingTable: 'Aperto · Saldo al tavolo',
       statusPendingPix: 'In attesa conferma PIX',

@@ -26,6 +26,35 @@ export const PRODUCT_CATEGORIES: ProductCategory[] = [
   'Bebidas',
 ];
 
+export const RESTAURANT_TABLES = [
+  '01',
+  '02',
+  '03',
+  '04',
+  '05',
+  '06',
+  '07',
+  '08',
+  '09',
+  '10',
+  '11',
+  '12',
+] as const;
+
+export function normalizeTableNumber(raw: string): string {
+  const cleaned = raw
+    .trim()
+    .replace(/^(mesa|tavolo)\s*/i, '')
+    .trim();
+  if (!cleaned) return '';
+  if (/^\d+$/.test(cleaned)) {
+    const num = Number(cleaned);
+    if (num >= 1 && num <= 9) return `0${num}`;
+    return String(num);
+  }
+  return cleaned.toUpperCase();
+}
+
 export const SEED_CATALOG: Product[] = [
   {
     id: 'mb-1',
@@ -211,7 +240,7 @@ export function buildWhatsAppMessage(
   const isIt = locale === 'it';
   const isTable = customer.mode === 'mesa';
   const isDelivery = customer.mode === 'delivery';
-  const cleanTable = customer.tableNumber.trim();
+  const cleanTable = normalizeTableNumber(customer.tableNumber);
   const formattedAddress = isDelivery
     ? `${customer.street.trim()}, ${customer.number.trim()} — ${customer.neighborhood.trim()}${
         customer.complement.trim() ? ` · ${customer.complement.trim()}` : ''
