@@ -154,8 +154,13 @@ export interface Translations {
     remove: string;
     totalLabel: string;
     deliveryQuestion: string;
+    table: string;
     pickup: string;
     delivery: string;
+    tableNumberLabel: string;
+    tableNumberPlaceholder: string;
+    tablePayTitle: string;
+    tablePayBody: string;
     pickupNotePrefix: string;
     pickupRegion: string;
     pickupNoteSuffix: string;
@@ -165,8 +170,10 @@ export interface Translations {
     complement: string;
     fullName: string;
     phone: string;
+    phoneOptional: string;
     phonePlaceholder: string;
     email: string;
+    emailOptional: string;
     notes: string;
     notesPlaceholder: string;
     pixTitle: string;
@@ -177,6 +184,8 @@ export interface Translations {
     pixWarningBody2: string;
     pixAgreeText: string;
     errEmptyCart: string;
+    errTable: string;
+    errTableName: string;
     errContact: string;
     errAddress: string;
     errPix: string;
@@ -184,10 +193,13 @@ export interface Translations {
     copySummary: string;
     copied: string;
     openWhatsApp: string;
+    newOrderButton: string;
     ctaEmpty: string;
     ctaUpdate: string;
     ctaGenerate: string;
+    ctaGenerateTable: string;
     toastReady: (protocol: string) => string;
+    toastTableSaved: (table: string, protocol: string) => string;
     toastCopied: string;
     toastCopyManual: string;
   };
@@ -236,9 +248,51 @@ export interface Translations {
     cancel: string;
     closeAria: string;
   };
+  cashier: {
+    tabMenu: string;
+    tabCashier: string;
+    dateLabel: string;
+    todayButton: string;
+    allDatesButton: string;
+    exportCsv: string;
+    copyClosing: string;
+    kpiTotal: string;
+    kpiPaid: string;
+    kpiPending: string;
+    kpiOrders: string;
+    avgTicket: string;
+    byModeTitle: string;
+    topItemsTitle: string;
+    noStatsYet: string;
+    filterAll: string;
+    filterPending: string;
+    filterPaid: string;
+    modeTable: string;
+    modePickup: string;
+    modeDelivery: string;
+    tablePrefix: string;
+    statusPaid: string;
+    statusPendingTable: string;
+    statusPendingPix: string;
+    markPaid: string;
+    reopenOrder: string;
+    deleteOrderAria: (protocol: string) => string;
+    emptyOrders: string;
+    toastMarkedPaid: (protocol: string) => string;
+    toastReopened: (protocol: string) => string;
+    toastOrderDeleted: (protocol: string) => string;
+    toastClosingCopied: string;
+    toastCsvExported: string;
+    closingReportTitle: string;
+    confirmDeleteOrderTitle: string;
+    confirmDeleteOrderDesc: (protocol: string) => string;
+    confirmDeleteOrderAction: string;
+  };
   floating: {
     whatsappAria: string;
     openCartAria: string;
+    backToTopAria: string;
+    backToTopLabel: string;
     itemSingular: string;
     itemPlural: string;
     viewOrder: string;
@@ -462,8 +516,14 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       remove: 'Remover',
       totalLabel: 'Total do pedido',
       deliveryQuestion: 'Como vamos combinar?',
+      table: 'Mesa',
       pickup: 'Buscar no local',
       delivery: 'Delivery',
+      tableNumberLabel: 'Número / identificação da mesa *',
+      tableNumberPlaceholder: 'Ex.: 01, 05, Varanda 2',
+      tablePayTitle: 'Pagamento na mesa (ao final do atendimento)',
+      tablePayBody:
+        'O pedido fica registrado no controle da casa e na sua mesa. O pagamento será realizado somente ao final do serviço, direto na mesa.',
       pickupNotePrefix: 'Retirada na ',
       pickupRegion: 'Itália',
       pickupNoteSuffix: '. Confirme endereço e horário com a equipe pelo WhatsApp.',
@@ -473,10 +533,12 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       complement: 'Complemento / referência',
       fullName: 'Nome completo *',
       phone: 'WhatsApp com DDD *',
-      phonePlaceholder: '(82) 99999-9999',
+      phoneOptional: 'WhatsApp (opcional na mesa)',
+      phonePlaceholder: '(71) 99999-9999',
       email: 'E-mail *',
+      emailOptional: 'E-mail (opcional na mesa)',
       notes: 'Observações do pedido',
-      notesPlaceholder: 'Ex.: ponto da carne, tirar cebola, troco...',
+      notesPlaceholder: 'Ex.: ponto da carne, tirar cebola, sem molho...',
       pixTitle: 'Pagamento via PIX',
       pixSubtitle: 'A chave e o pagamento serão combinados com a equipe no WhatsApp.',
       pixWarningPrefix: 'IMPORTANTE:',
@@ -487,6 +549,8 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       pixAgreeText:
         'Estou ciente de que o pagamento será via PIX e que o pedido só será retirado/entregue mediante apresentação do comprovante de pagamento.',
       errEmptyCart: 'Adicione itens com preço cadastrado antes de continuar.',
+      errTable: 'Informe o número ou identificação da mesa.',
+      errTableName: 'Informe o seu nome para identificar o pedido na mesa.',
       errContact:
         'Confira seu nome completo, WhatsApp com DDD (10 ou 11 dígitos) e e-mail válido.',
       errAddress: 'Para delivery, preencha rua/avenida, número e bairro.',
@@ -496,10 +560,14 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       copySummary: 'Copiar resumo',
       copied: 'Copiado',
       openWhatsApp: 'Abrir WhatsApp com este pedido',
+      newOrderButton: 'Iniciar novo pedido',
       ctaEmpty: 'Adicionar itens ao pedido',
       ctaUpdate: 'Atualizar resumo do pedido',
       ctaGenerate: 'Gerar pedido para o WhatsApp',
-      toastReady: (protocol) => `Pedido ${protocol} pronto para envio no WhatsApp.`,
+      ctaGenerateTable: 'Registrar pedido da mesa',
+      toastReady: (protocol) => `Pedido ${protocol} registrado e pronto para envio no WhatsApp.`,
+      toastTableSaved: (table, protocol) =>
+        `Mesa ${table} (${protocol}) registrada no caixa para pagamento ao final.`,
       toastCopied: 'Resumo do pedido copiado.',
       toastCopyManual: 'Selecione e copie o texto do resumo manualmente.',
     },
@@ -552,9 +620,52 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       cancel: 'Cancelar',
       closeAria: 'Fechar confirmação',
     },
+    cashier: {
+      tabMenu: 'Cardápio',
+      tabCashier: 'Caixa & Estatísticas',
+      dateLabel: 'Dia do caixa',
+      todayButton: 'Hoje',
+      allDatesButton: 'Todos os dias',
+      exportCsv: 'Exportar CSV',
+      copyClosing: 'Copiar fechamento',
+      kpiTotal: 'Total movimentado',
+      kpiPaid: 'Recebido (pago)',
+      kpiPending: 'Em aberto (mesas / pendentes)',
+      kpiOrders: 'Pedidos registrados',
+      avgTicket: 'Ticket médio',
+      byModeTitle: 'Resumo por modalidade',
+      topItemsTitle: 'Itens mais pedidos',
+      noStatsYet: 'Sem dados suficientes no período selecionado.',
+      filterAll: 'Todos',
+      filterPending: 'Em aberto',
+      filterPaid: 'Pagos',
+      modeTable: 'Mesa',
+      modePickup: 'Retirada',
+      modeDelivery: 'Delivery',
+      tablePrefix: 'Mesa',
+      statusPaid: 'Pago',
+      statusPendingTable: 'Em aberto · Pagar na mesa',
+      statusPendingPix: 'Aguardando confirmação PIX',
+      markPaid: 'Fechar / Marcar pago',
+      reopenOrder: 'Reabrir',
+      deleteOrderAria: (protocol) => `Excluir registro ${protocol}`,
+      emptyOrders: 'Nenhum pedido registrado neste filtro.',
+      toastMarkedPaid: (protocol) => `Pedido ${protocol} marcado como pago no caixa.`,
+      toastReopened: (protocol) => `Pedido ${protocol} reaberto como pendente.`,
+      toastOrderDeleted: (protocol) => `Registro ${protocol} removido do caixa.`,
+      toastClosingCopied: 'Resumo de fechamento do caixa copiado.',
+      toastCsvExported: 'Planilha CSV de pedidos exportada.',
+      closingReportTitle: 'FECHAMENTO DO CAIXA — MENK’S BURGER',
+      confirmDeleteOrderTitle: 'Excluir registro do caixa?',
+      confirmDeleteOrderDesc: (protocol) =>
+        `Deseja remover o pedido ${protocol} do histórico do caixa? Esta ação não pode ser desfeita.`,
+      confirmDeleteOrderAction: 'Excluir registro',
+    },
     floating: {
       whatsappAria: 'Falar com a Menk’s Burger pelo WhatsApp',
       openCartAria: 'Abrir meu pedido',
+      backToTopAria: 'Voltar para o início da página',
+      backToTopLabel: 'Início',
       itemSingular: 'item',
       itemPlural: 'itens',
       viewOrder: 'Ver pedido',
@@ -778,8 +889,14 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       remove: 'Rimuovi',
       totalLabel: 'Totale dell’ordine',
       deliveryQuestion: 'Come preferisci riceverlo?',
+      table: 'Tavolo',
       pickup: 'Ritiro in sede',
       delivery: 'Consegna',
+      tableNumberLabel: 'Numero / nome del tavolo *',
+      tableNumberPlaceholder: 'Es.: 01, 05, Terrazza 2',
+      tablePayTitle: 'Pagamento al tavolo (a fine servizio)',
+      tablePayBody:
+        'L’ordine viene registrato sul tuo tavolo e in cassa. Il pagamento avverrà solo al termine del servizio, direttamente al tavolo.',
       pickupNotePrefix: 'Ritiro in ',
       pickupRegion: 'Italia',
       pickupNoteSuffix: '. Conferma indirizzo e orario con il team su WhatsApp.',
@@ -789,8 +906,10 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       complement: 'Interno / riferimento',
       fullName: 'Nome completo *',
       phone: 'WhatsApp con prefisso *',
-      phonePlaceholder: '(82) 99999-9999',
+      phoneOptional: 'WhatsApp (opzionale al tavolo)',
+      phonePlaceholder: '(71) 99999-9999',
       email: 'E-mail *',
+      emailOptional: 'E-mail (opzionale al tavolo)',
       notes: 'Note dell’ordine',
       notesPlaceholder: 'Es.: cottura carne, senza cipolla...',
       pixTitle: 'Pagamento tramite PIX',
@@ -804,6 +923,8 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       pixAgreeText:
         'Confermo di essere consapevole che il pagamento avviene via PIX e che l’ordine sarà consegnato/ritirato solo dopo l’invio della ricevuta.',
       errEmptyCart: 'Aggiungi prodotti con prezzo prima di continuare.',
+      errTable: 'Inserisci il numero o il nome del tavolo.',
+      errTableName: 'Inserisci il tuo nome per identificare l’ordine al tavolo.',
       errContact:
         'Controlla nome completo, WhatsApp con prefisso (10 o 11 cifre) ed e-mail valida.',
       errAddress: 'Per la consegna, compila via/viale, civico e quartiere.',
@@ -813,11 +934,15 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       copySummary: 'Copia riepilogo',
       copied: 'Copiato',
       openWhatsApp: 'Apri WhatsApp con questo ordine',
+      newOrderButton: 'Nuovo ordine',
       ctaEmpty: 'Aggiungi prodotti all’ordine',
       ctaUpdate: 'Aggiorna riepilogo ordine',
       ctaGenerate: 'Genera ordine per WhatsApp',
+      ctaGenerateTable: 'Registra ordine al tavolo',
       toastReady: (protocol) =>
-        `Ordine ${protocol} pronto per l’invio su WhatsApp.`,
+        `Ordine ${protocol} registrato e pronto per l’invio su WhatsApp.`,
+      toastTableSaved: (table, protocol) =>
+        `Tavolo ${table} (${protocol}) registrato in cassa per il saldo a fine servizio.`,
       toastCopied: 'Riepilogo dell’ordine copiato.',
       toastCopyManual: 'Seleziona e copia manualmente il riepilogo qui sopra.',
     },
@@ -870,9 +995,52 @@ export const TRANSLATIONS: Record<Locale, Translations> = {
       cancel: 'Annulla',
       closeAria: 'Chiudi conferma',
     },
+    cashier: {
+      tabMenu: 'Menù',
+      tabCashier: 'Cassa & Statistiche',
+      dateLabel: 'Giorno cassa',
+      todayButton: 'Oggi',
+      allDatesButton: 'Tutti i giorni',
+      exportCsv: 'Esporta CSV',
+      copyClosing: 'Copia chiusura',
+      kpiTotal: 'Totale movimento',
+      kpiPaid: 'Incassato (pagato)',
+      kpiPending: 'Aperto (tavoli / in attesa)',
+      kpiOrders: 'Ordini registrati',
+      avgTicket: 'Scontrino medio',
+      byModeTitle: 'Riepilogo per modalità',
+      topItemsTitle: 'Prodotti più richiesti',
+      noStatsYet: 'Nessun dato disponibile nel periodo selezionato.',
+      filterAll: 'Tutti',
+      filterPending: 'Aperti',
+      filterPaid: 'Pagati',
+      modeTable: 'Tavolo',
+      modePickup: 'Ritiro',
+      modeDelivery: 'Consegna',
+      tablePrefix: 'Tavolo',
+      statusPaid: 'Pagato',
+      statusPendingTable: 'Aperto · Saldo al tavolo',
+      statusPendingPix: 'In attesa conferma PIX',
+      markPaid: 'Chiudi / Segna pagato',
+      reopenOrder: 'Riapri',
+      deleteOrderAria: (protocol) => `Elimina registrazione ${protocol}`,
+      emptyOrders: 'Nessun ordine registrato per questo filtro.',
+      toastMarkedPaid: (protocol) => `Ordine ${protocol} segnato come pagato in cassa.`,
+      toastReopened: (protocol) => `Ordine ${protocol} riaperto come in attesa.`,
+      toastOrderDeleted: (protocol) => `Registrazione ${protocol} rimossa dalla cassa.`,
+      toastClosingCopied: 'Riepilogo di chiusura cassa copiato.',
+      toastCsvExported: 'File CSV degli ordini esportato.',
+      closingReportTitle: 'CHIUSURA CASSA — MENK’S BURGER',
+      confirmDeleteOrderTitle: 'Eliminare ordine dalla cassa?',
+      confirmDeleteOrderDesc: (protocol) =>
+        `Vuoi rimuovere l’ordine ${protocol} dallo storico cassa? Questa azione non può essere annullata.`,
+      confirmDeleteOrderAction: 'Elimina ordine',
+    },
     floating: {
       whatsappAria: 'Scrivi a Menk’s Burger su WhatsApp',
       openCartAria: 'Apri il mio ordine',
+      backToTopAria: 'Torna all’inizio della pagina',
+      backToTopLabel: 'Inizio',
       itemSingular: 'articolo',
       itemPlural: 'articoli',
       viewOrder: 'Vedi ordine',

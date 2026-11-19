@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DEFAULT_CUSTOMER, SEED_CATALOG } from '../data/catalog';
-import type { CartItem, CustomerInfo, Product } from '../types';
+import type { CartItem, CustomerInfo, OrderRecord, Product } from '../types';
 
 const STORAGE_KEYS = {
   catalog: 'menks_catalog',
   cart: 'menks_cart',
   customer: 'menks_customer',
+  orders: 'menks_orders',
 } as const;
 
 function readStorage<T>(key: string, fallback: T): T {
@@ -34,6 +35,11 @@ export function useMenksStore() {
     ...DEFAULT_CUSTOMER,
     ...readStorage<Partial<CustomerInfo>>(STORAGE_KEYS.customer, DEFAULT_CUSTOMER),
   }));
+
+  const [orders, setOrders] = useState<OrderRecord[]>(() => {
+    const stored = readStorage<OrderRecord[]>(STORAGE_KEYS.orders, []);
+    return Array.isArray(stored) ? stored : [];
+  });
 
   // Normalize cart whenever catalog changes (removes deleted or unpriced items)
   const normalizedCart = useMemo(() => {
@@ -71,6 +77,14 @@ export function useMenksStore() {
       // Ignore storage quota errors cleanly
     }
   }, [customer]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEYS.orders, JSON.stringify(orders));
+    } catch {
+      // Ignore storage quota errors cleanly
+    }
+  }, [orders]);
 
   const cartCount = useMemo(
     () => normalizedCart.reduce((sum, item) => sum + item.qty, 0),
@@ -143,10 +157,47 @@ export function useMenksStore() {
     setCustomer((prev) => ({ ...prev, ...patch }));
   }, []);
 
+  const recordOrder = useCallback((order: OrderRecord) => {
+    setOrders((prev) => {
+      const exists = prev.some((o) => o.protocol === order.protocol);
+      if (exists) {
+        return prev.map((o) =>
+          o.protocol === order.protocol
+            ? {
+                ...order,
+                paymentStatus: o.paymentStatus,
+                paidAt: o.paidAt,
+              }
+            : o
+        );
+      }
+      return [order, ...prev];
+    });
+  }, []);
+
+  const toggleOrderPaid = useCallback((orderId: string) => {
+    setOrders((prev) =>
+      prev.map((o) => {
+        if (o.id !== orderId) return o;
+        const nextPaid = o.paymentStatus !== 'pago';
+        return {
+          ...o,
+          paymentStatus: nextPaid ? 'pago' : 'pendente',
+          paidAt: nextPaid ? new Date().toISOString() : null,
+        };
+      })
+    );
+  }, []);
+
+  const deleteOrder = useCallback((orderId: string) => {
+    setOrders((prev) => prev.filter((o) => o.id !== orderId));
+  }, []);
+
   return {
     catalog,
     cart: normalizedCart,
     customer,
+    orders,
     cartCount,
     cartTotal,
     addToCart,
@@ -157,5 +208,8 @@ export function useMenksStore() {
     deleteProduct,
     restoreCatalog,
     updateCustomer,
+    recordOrder,
+    toggleOrderPaid,
+    deleteOrder,
   };
 }

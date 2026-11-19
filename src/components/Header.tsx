@@ -99,19 +99,6 @@ export function Header({
             />
             <button
               type="button"
-              onClick={() => onChangeLocale('pt')}
-              aria-pressed={locale === 'pt'}
-              title="Português (Brasil)"
-              className={`whitespace-nowrap rounded-[2px] px-2 py-1 text-[11px] font-extrabold uppercase tracking-[0.06em] transition-colors duration-150 ${
-                locale === 'pt'
-                  ? 'bg-[#f5a623] text-[#23190e]'
-                  : 'text-[#eee7dd] hover:text-[#f5a623]'
-              }`}
-            >
-              PT-BR
-            </button>
-            <button
-              type="button"
               onClick={() => onChangeLocale('it')}
               aria-pressed={locale === 'it'}
               title="Italiano"
@@ -122,6 +109,19 @@ export function Header({
               }`}
             >
               IT
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeLocale('pt')}
+              aria-pressed={locale === 'pt'}
+              title="Português (Brasil)"
+              className={`whitespace-nowrap rounded-[2px] px-2 py-1 text-[11px] font-extrabold uppercase tracking-[0.06em] transition-colors duration-150 ${
+                locale === 'pt'
+                  ? 'bg-[#f5a623] text-[#23190e]'
+                  : 'text-[#eee7dd] hover:text-[#f5a623]'
+              }`}
+            >
+              PT-BR
             </button>
           </div>
         </nav>
@@ -136,19 +136,6 @@ export function Header({
           >
             <button
               type="button"
-              onClick={() => onChangeLocale('pt')}
-              aria-pressed={locale === 'pt'}
-              title="Português (Brasil)"
-              className={`whitespace-nowrap rounded-[2px] px-2 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] transition-colors duration-150 ${
-                locale === 'pt'
-                  ? 'bg-[#f5a623] text-[#23190e]'
-                  : 'text-[#eee7dd] hover:text-[#f5a623]'
-              }`}
-            >
-              PT
-            </button>
-            <button
-              type="button"
               onClick={() => onChangeLocale('it')}
               aria-pressed={locale === 'it'}
               title="Italiano"
@@ -159,6 +146,19 @@ export function Header({
               }`}
             >
               IT
+            </button>
+            <button
+              type="button"
+              onClick={() => onChangeLocale('pt')}
+              aria-pressed={locale === 'pt'}
+              title="Português (Brasil)"
+              className={`whitespace-nowrap rounded-[2px] px-2 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] transition-colors duration-150 ${
+                locale === 'pt'
+                  ? 'bg-[#f5a623] text-[#23190e]'
+                  : 'text-[#eee7dd] hover:text-[#f5a623]'
+              }`}
+            >
+              PT
             </button>
           </div>
 
@@ -217,18 +217,6 @@ export function Header({
               >
                 <button
                   type="button"
-                  onClick={() => onChangeLocale('pt')}
-                  aria-pressed={locale === 'pt'}
-                  className={`whitespace-nowrap rounded-[2px] px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.06em] transition-colors ${
-                    locale === 'pt'
-                      ? 'bg-[#f5a623] text-[#23190e]'
-                      : 'text-[#eee7dd] hover:text-[#f5a623]'
-                  }`}
-                >
-                  Português (BR)
-                </button>
-                <button
-                  type="button"
                   onClick={() => onChangeLocale('it')}
                   aria-pressed={locale === 'it'}
                   className={`whitespace-nowrap rounded-[2px] px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.06em] transition-colors ${
@@ -238,6 +226,18 @@ export function Header({
                   }`}
                 >
                   Italiano
+                </button>
+                <button
+                  type="button"
+                  onClick={() => onChangeLocale('pt')}
+                  aria-pressed={locale === 'pt'}
+                  className={`whitespace-nowrap rounded-[2px] px-3 py-1.5 text-xs font-extrabold uppercase tracking-[0.06em] transition-colors ${
+                    locale === 'pt'
+                      ? 'bg-[#f5a623] text-[#23190e]'
+                      : 'text-[#eee7dd] hover:text-[#f5a623]'
+                  }`}
+                >
+                  Português (BR)
                 </button>
               </div>
             </div>

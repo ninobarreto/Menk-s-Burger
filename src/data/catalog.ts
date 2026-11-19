@@ -1,4 +1,11 @@
-import type { CartItem, CustomerInfo, Product, ProductCategory } from '../types';
+import type {
+  CartItem,
+  CustomerInfo,
+  OrderRecord,
+  OrderRecordItem,
+  Product,
+  ProductCategory,
+} from '../types';
 
 export const WHATSAPP_NUMBER = '5571992129125';
 export const WHATSAPP_DISPLAY = '(71) 99212-9125';
@@ -113,7 +120,8 @@ export const SEED_CATALOG: Product[] = [
 ];
 
 export const DEFAULT_CUSTOMER: CustomerInfo = {
-  mode: 'retirada',
+  mode: 'mesa',
+  tableNumber: '',
   customerName: '',
   customerPhone: '',
   customerEmail: '',
@@ -159,17 +167,27 @@ export const SEED_CATALOG_MAP: Record<string, Product> = Object.fromEntries(
   SEED_CATALOG.map((item) => [item.id, item])
 );
 
+export function getLocalDateKey(date: Date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
 export function buildWhatsAppMessage(
   cart: CartItem[],
   catalog: Product[],
   customer: CustomerInfo,
-  locale: 'pt' | 'it' = 'pt',
-  getItemName?: (product: Product) => string
-): { protocol: string; message: string; url: string } {
+  locale: 'pt' | 'it' = 'it',
+  getItemName?: (product: Product) => string,
+  existingProtocol?: string
+): { protocol: string; message: string; url: string; record: OrderRecord } {
   const now = new Date();
-  const protocol = `MNK-${now.toISOString().replace(/\D/g, '').slice(2, 14)}`;
+  const protocol =
+    existingProtocol || `MNK-${now.toISOString().replace(/\D/g, '').slice(2, 14)}`;
 
   let total = 0;
+  const recordItems: OrderRecordItem[] = [];
   const itemLines = cart
     .map((entry, idx) => {
       const prod = catalog.find((p) => p.id === entry.id);
@@ -177,30 +195,65 @@ export function buildWhatsAppMessage(
       const lineTotal = prod.price * entry.qty;
       total += lineTotal;
       const displayName = getItemName ? getItemName(prod) : prod.name;
+      recordItems.push({
+        productId: prod.id,
+        name: displayName,
+        category: prod.category,
+        qty: entry.qty,
+        unitPrice: prod.price,
+        lineTotal,
+      });
       return `${idx + 1}. ${displayName} — ${entry.qty} x ${formatMoney(prod.price)} = ${formatMoney(lineTotal)}`;
     })
     .filter(Boolean)
     .join('\n');
 
   const isIt = locale === 'it';
+  const isTable = customer.mode === 'mesa';
+  const isDelivery = customer.mode === 'delivery';
+  const cleanTable = customer.tableNumber.trim();
+  const formattedAddress = isDelivery
+    ? `${customer.street.trim()}, ${customer.number.trim()} — ${customer.neighborhood.trim()}${
+        customer.complement.trim() ? ` · ${customer.complement.trim()}` : ''
+      }`
+    : '';
+
   const addressLabel = isIt ? 'Indirizzo' : 'Endereço';
-  const addressBlock =
-    customer.mode === 'delivery'
-      ? `\n${addressLabel}: ${customer.street.trim()}, ${customer.number.trim()} — ${customer.neighborhood.trim()}${
-          customer.complement.trim() ? ` · ${customer.complement.trim()}` : ''
-        }`
-      : '';
+  const addressBlock = formattedAddress ? `\n${addressLabel}: ${formattedAddress}` : '';
+
+  const modeLineIt = isTable
+    ? `SERVIZIO AL TAVOLO (Tavolo ${cleanTable})`
+    : isDelivery
+      ? 'CONSEGNA A DOMICILIO (DELIVERY)'
+      : 'RITIRO IN SEDE';
+
+  const modeLinePt = isTable
+    ? `CONSUMO NA MESA (Mesa ${cleanTable})`
+    : isDelivery
+      ? 'ENTREGA POR DELIVERY'
+      : 'RETIRADA NO ESTABELECIMENTO';
+
+  const paymentLineIt = isTable
+    ? 'Pagamento al tavolo al termine del servizio.'
+    : 'Pagamento tramite PIX. Sono consapevole che l’ordine verrà rilasciato solo dopo l’invio e la conferma della ricevuta sul WhatsApp del locale.';
+
+  const paymentLinePt = isTable
+    ? 'Pagamento na mesa ao final do atendimento.'
+    : 'Pagamento via PIX. Estou ciente de que a liberação ocorre mediante envio e confirmação do comprovante no WhatsApp da casa.';
+
+  const phoneLine = customer.customerPhone.trim()
+    ? `WhatsApp: ${customer.customerPhone.trim()}`
+    : null;
+  const emailLine = customer.customerEmail.trim()
+    ? `E-mail: ${customer.customerEmail.trim()}`
+    : null;
 
   const message = isIt
     ? [
         '*ORDINE MENK’S BURGER*',
         `Protocollo: ${protocol}`,
         `Data/ora: ${now.toLocaleString('it-IT')}`,
-        `Modalità: ${
-          customer.mode === 'delivery'
-            ? 'CONSEGNA A DOMICILIO (DELIVERY)'
-            : 'RITIRO IN SEDE'
-        }`,
+        `Modalità: ${modeLineIt}`,
         '',
         '*PRODOTTI*',
         itemLines,
@@ -209,21 +262,19 @@ export function buildWhatsAppMessage(
         '',
         '*CLIENTE*',
         `Nome: ${customer.customerName.trim()}`,
-        `WhatsApp: ${customer.customerPhone.trim()}`,
-        `E-mail: ${customer.customerEmail.trim()}${addressBlock}`,
+        ...(isTable ? [`Tavolo: ${cleanTable}`] : []),
+        ...(phoneLine ? [phoneLine] : []),
+        ...(emailLine ? [emailLine] : []),
+        ...(addressBlock ? [addressBlock.trim()] : []),
         `Note: ${customer.orderNotes.trim() || '—'}`,
         '',
-        'Pagamento tramite PIX. Sono consapevole che l’ordine verrà rilasciato solo dopo l’invio e la conferma della ricevuta sul WhatsApp del locale.',
+        paymentLineIt,
       ].join('\n')
     : [
         '*PEDIDO MENK’S BURGER*',
         `Protocolo: ${protocol}`,
         `Data/hora: ${now.toLocaleString('pt-BR')}`,
-        `Modalidade: ${
-          customer.mode === 'delivery'
-            ? 'ENTREGA POR DELIVERY'
-            : 'RETIRADA NO ESTABELECIMENTO'
-        }`,
+        `Modalidade: ${modeLinePt}`,
         '',
         '*ITENS*',
         itemLines,
@@ -232,13 +283,34 @@ export function buildWhatsAppMessage(
         '',
         '*CLIENTE*',
         `Nome: ${customer.customerName.trim()}`,
-        `WhatsApp: ${customer.customerPhone.trim()}`,
-        `E-mail: ${customer.customerEmail.trim()}${addressBlock}`,
+        ...(isTable ? [`Mesa: ${cleanTable}`] : []),
+        ...(phoneLine ? [phoneLine] : []),
+        ...(emailLine ? [emailLine] : []),
+        ...(addressBlock ? [addressBlock.trim()] : []),
         `Observações: ${customer.orderNotes.trim() || '—'}`,
         '',
-        'Pagamento via PIX. Estou ciente de que a liberação ocorre mediante envio e confirmação do comprovante no WhatsApp da casa.',
+        paymentLinePt,
       ].join('\n');
 
+  const record: OrderRecord = {
+    id: protocol,
+    protocol,
+    createdAt: now.toISOString(),
+    dateKey: getLocalDateKey(now),
+    mode: customer.mode,
+    tableNumber: isTable ? cleanTable : '',
+    customerName: customer.customerName.trim(),
+    customerPhone: customer.customerPhone.trim(),
+    customerEmail: customer.customerEmail.trim(),
+    address: formattedAddress,
+    notes: customer.orderNotes.trim(),
+    items: recordItems,
+    total,
+    paymentMethod: isTable ? 'mesa' : 'pix',
+    paymentStatus: 'pendente',
+    paidAt: null,
+  };
+
   const url = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
-  return { protocol, message, url };
+  return { protocol, message, url, record };
 }

@@ -22,10 +22,11 @@ export interface CartItem {
   qty: number;
 }
 
-export type OrderMode = 'retirada' | 'delivery';
+export type OrderMode = 'retirada' | 'delivery' | 'mesa';
 
 export interface CustomerInfo {
   mode: OrderMode;
+  tableNumber: string;
   customerName: string;
   customerPhone: string;
   customerEmail: string;
@@ -34,6 +35,36 @@ export interface CustomerInfo {
   neighborhood: string;
   complement: string;
   orderNotes: string;
+}
+
+export type OrderPaymentStatus = 'pago' | 'pendente';
+
+export interface OrderRecordItem {
+  productId: string;
+  name: string;
+  category: ProductCategory;
+  qty: number;
+  unitPrice: number;
+  lineTotal: number;
+}
+
+export interface OrderRecord {
+  id: string;
+  protocol: string;
+  createdAt: string;
+  dateKey: string;
+  mode: OrderMode;
+  tableNumber: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  address: string;
+  notes: string;
+  items: OrderRecordItem[];
+  total: number;
+  paymentMethod: 'pix' | 'mesa';
+  paymentStatus: OrderPaymentStatus;
+  paidAt: string | null;
 }
 
 export interface ToastMessage {

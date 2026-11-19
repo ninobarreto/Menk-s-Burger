@@ -1,12 +1,14 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type ChangeEvent, type FormEvent } from 'react';
 import {
   AlertCircle,
   KeyRound,
   LogOut,
   Pencil,
+  Receipt,
   RotateCcw,
   Trash2,
   Upload,
+  UtensilsCrossed,
   X,
 } from 'lucide-react';
 import {
@@ -15,19 +17,25 @@ import {
   PRODUCT_CATEGORIES,
 } from '../data/catalog';
 import type { Translations } from '../i18n/translations';
-import type { Product, ProductCategory } from '../types';
+import type { Locale, OrderRecord, Product, ProductCategory } from '../types';
+import { CashierPanel } from './CashierPanel';
 
 interface AdminModalProps {
   open: boolean;
+  locale: Locale;
   t: Translations['admin'];
   menuT: Translations['menu'];
   ownerAuthT: Translations['ownerAuth'];
+  cashierT: Translations['cashier'];
   editingProductId: string | null;
   catalog: Product[];
+  orders: OrderRecord[];
   onClose: () => void;
   onSaveProduct: (product: Product) => void;
   onRequestDeleteProduct: (product: Product) => void;
   onRequestRestoreCatalog: () => void;
+  onToggleOrderPaid: (order: OrderRecord) => void;
+  onRequestDeleteOrder: (order: OrderRecord) => void;
   onChangePassword: (newPassword: string) => void;
   onLogout: () => void;
   onNotify: (text: string, tone?: 'success' | 'info' | 'error') => void;
@@ -35,19 +43,25 @@ interface AdminModalProps {
 
 export function AdminModal({
   open,
+  locale,
   t,
   menuT,
   ownerAuthT,
+  cashierT,
   editingProductId,
   catalog,
+  orders,
   onClose,
   onSaveProduct,
   onRequestDeleteProduct,
   onRequestRestoreCatalog,
+  onToggleOrderPaid,
+  onRequestDeleteOrder,
   onChangePassword,
   onLogout,
   onNotify,
 }: AdminModalProps) {
+  const [activeTab, setActiveTab] = useState<'menu' | 'cashier'>('menu');
   const [productId, setProductId] = useState('');
   const [name, setName] = useState('');
   const [priceStr, setPriceStr] = useState('');
@@ -62,6 +76,11 @@ export function AdminModal({
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
+  const openPendingCount = useMemo(
+    () => orders.filter((o) => o.paymentStatus === 'pendente').length,
+    [orders]
+  );
 
   const resetForm = () => {
     setProductId('');
@@ -96,6 +115,7 @@ export function AdminModal({
     setConfirmPassword('');
     setPasswordError(null);
     if (editingProductId) {
+      setActiveTab('menu');
       const target = catalog.find((p) => p.id === editingProductId);
       if (target) {
         loadIntoForm(target);
@@ -252,6 +272,47 @@ export function AdminModal({
           </div>
         </div>
 
+        {/* Tab Switcher: Menu Management vs Cashier & Statistics */}
+        <div
+          role="tablist"
+          className="flex border-b border-[#dfd6c9] bg-[#ebe4d9] px-4 pt-2 sm:px-6"
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'menu'}
+            onClick={() => setActiveTab('menu')}
+            className={`inline-flex items-center gap-2 rounded-t-[3px] px-4 py-2.5 text-xs font-extrabold uppercase tracking-[0.07em] transition-colors ${
+              activeTab === 'menu'
+                ? 'bg-[#f6f1e8] text-[#211d1a]'
+                : 'text-[#625950] hover:text-[#211d1a]'
+            }`}
+          >
+            <UtensilsCrossed className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{cashierT.tabMenu}</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'cashier'}
+            onClick={() => setActiveTab('cashier')}
+            className={`inline-flex items-center gap-2 rounded-t-[3px] px-4 py-2.5 text-xs font-extrabold uppercase tracking-[0.07em] transition-colors ${
+              activeTab === 'cashier'
+                ? 'bg-[#f6f1e8] text-[#211d1a]'
+                : 'text-[#625950] hover:text-[#211d1a]'
+            }`}
+          >
+            <Receipt className="h-3.5 w-3.5" aria-hidden="true" />
+            <span>{cashierT.tabCashier}</span>
+            {openPendingCount > 0 && (
+              <span className="tabular-nums rounded-[2px] bg-[#a23e1e] px-1.5 py-0.5 text-[10px] font-extrabold text-white">
+                {openPendingCount}
+              </span>
+            )}
+          </button>
+        </div>
+
         {/* Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           {passwordPanelOpen && (
@@ -325,7 +386,17 @@ export function AdminModal({
             {t.warningAfterCode}
           </div>
 
-          <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_1fr]">
+          {activeTab === 'cashier' ? (
+            <CashierPanel
+              locale={locale}
+              orders={orders}
+              t={cashierT}
+              onTogglePaid={onToggleOrderPaid}
+              onRequestDeleteOrder={onRequestDeleteOrder}
+              onNotify={onNotify}
+            />
+          ) : (
+            <div className="grid grid-cols-1 gap-7 lg:grid-cols-[1fr_1fr]">
             {/* Left: Create / Edit Product Form */}
             <form
               onSubmit={handleSubmit}
@@ -593,6 +664,7 @@ export function AdminModal({
               </button>
             </div>
           </div>
+          )}
         </div>
       </div>
     </div>

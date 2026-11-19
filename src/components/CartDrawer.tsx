@@ -22,7 +22,13 @@ import {
   getLocalizedProduct,
   type Translations,
 } from '../i18n/translations';
-import type { CartItem, CustomerInfo, Locale, Product } from '../types';
+import type {
+  CartItem,
+  CustomerInfo,
+  Locale,
+  OrderRecord,
+  Product,
+} from '../types';
 
 interface CartDrawerProps {
   open: boolean;
@@ -35,7 +41,9 @@ interface CartDrawerProps {
   onClose: () => void;
   onChangeQty: (productId: string, delta: number) => void;
   onRemoveItem: (productId: string) => void;
+  onClearCart: () => void;
   onUpdateCustomer: (patch: Partial<CustomerInfo>) => void;
+  onRecordOrder: (order: OrderRecord) => void;
   onNotify: (text: string, tone?: 'success' | 'info' | 'error') => void;
 }
 
@@ -50,7 +58,9 @@ export function CartDrawer({
   onClose,
   onChangeQty,
   onRemoveItem,
+  onClearCart,
   onUpdateCustomer,
+  onRecordOrder,
   onNotify,
 }: CartDrawerProps) {
   const [pixAgree, setPixAgree] = useState(false);
@@ -81,6 +91,7 @@ export function CartDrawer({
 
   if (!open) return null;
 
+  const isTable = customer.mode === 'mesa';
   const isDelivery = customer.mode === 'delivery';
 
   const handleGenerateOrder = () => {
@@ -89,29 +100,40 @@ export function CartDrawer({
       return;
     }
 
-    const phoneDigits = customer.customerPhone.replace(/\D/g, '');
-    if (
-      !customer.customerName.trim() ||
-      phoneDigits.length < 10 ||
-      !isValidEmail(customer.customerEmail)
-    ) {
-      setValidationError(t.errContact);
-      return;
-    }
+    if (isTable) {
+      if (!customer.tableNumber.trim()) {
+        setValidationError(t.errTable);
+        return;
+      }
+      if (!customer.customerName.trim()) {
+        setValidationError(t.errTableName);
+        return;
+      }
+    } else {
+      const phoneDigits = customer.customerPhone.replace(/\D/g, '');
+      if (
+        !customer.customerName.trim() ||
+        phoneDigits.length < 10 ||
+        !isValidEmail(customer.customerEmail)
+      ) {
+        setValidationError(t.errContact);
+        return;
+      }
 
-    if (
-      isDelivery &&
-      (!customer.street.trim() ||
-        !customer.number.trim() ||
-        !customer.neighborhood.trim())
-    ) {
-      setValidationError(t.errAddress);
-      return;
-    }
+      if (
+        isDelivery &&
+        (!customer.street.trim() ||
+          !customer.number.trim() ||
+          !customer.neighborhood.trim())
+      ) {
+        setValidationError(t.errAddress);
+        return;
+      }
 
-    if (!pixAgree) {
-      setValidationError(t.errPix);
-      return;
+      if (!pixAgree) {
+        setValidationError(t.errPix);
+        return;
+      }
     }
 
     setValidationError(null);
@@ -120,10 +142,23 @@ export function CartDrawer({
       catalog,
       customer,
       locale,
-      (prod) => getLocalizedProduct(prod, locale, SEED_CATALOG_MAP).name
+      (prod) => getLocalizedProduct(prod, locale, SEED_CATALOG_MAP).name,
+      orderPreview?.protocol
     );
-    setOrderPreview(payload);
-    onNotify(t.toastReady(payload.protocol), 'success');
+    onRecordOrder(payload.record);
+    setOrderPreview({
+      protocol: payload.protocol,
+      message: payload.message,
+      url: payload.url,
+    });
+    if (isTable) {
+      onNotify(
+        t.toastTableSaved(customer.tableNumber.trim(), payload.protocol),
+        'success'
+      );
+    } else {
+      onNotify(t.toastReady(payload.protocol), 'success');
+    }
   };
 
   const handleCopySummary = async () => {
@@ -275,18 +310,35 @@ export function CartDrawer({
                 </strong>
               </div>
 
-              {/* Delivery / Pickup Selector */}
+              {/* Table / Pickup / Delivery Selector */}
               <div>
                 <h3 className="font-display text-xl uppercase tracking-wide text-[#211d1a]">
                   {t.deliveryQuestion}
                 </h3>
 
-                <div className="mt-2 grid grid-cols-2 gap-2 rounded-[3px] bg-[#e9e2d7] p-1">
+                <div className="mt-2 grid grid-cols-3 gap-1.5 rounded-[3px] bg-[#e9e2d7] p-1">
                   <button
                     type="button"
-                    onClick={() => onUpdateCustomer({ mode: 'retirada' })}
-                    className={`h-10 rounded-[2px] text-xs font-extrabold uppercase tracking-[0.06em] transition-colors ${
-                      !isDelivery
+                    onClick={() => {
+                      onUpdateCustomer({ mode: 'mesa' });
+                      setValidationError(null);
+                    }}
+                    className={`h-10 rounded-[2px] px-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] transition-colors ${
+                      isTable
+                        ? 'bg-[#211d1a] text-[#f5a623] shadow-xs'
+                        : 'text-[#5b534b] hover:text-[#211d1a]'
+                    }`}
+                  >
+                    {t.table}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onUpdateCustomer({ mode: 'retirada' });
+                      setValidationError(null);
+                    }}
+                    className={`h-10 rounded-[2px] px-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] transition-colors ${
+                      customer.mode === 'retirada'
                         ? 'bg-[#211d1a] text-[#f5a623] shadow-xs'
                         : 'text-[#5b534b] hover:text-[#211d1a]'
                     }`}
@@ -295,8 +347,11 @@ export function CartDrawer({
                   </button>
                   <button
                     type="button"
-                    onClick={() => onUpdateCustomer({ mode: 'delivery' })}
-                    className={`h-10 rounded-[2px] text-xs font-extrabold uppercase tracking-[0.06em] transition-colors ${
+                    onClick={() => {
+                      onUpdateCustomer({ mode: 'delivery' });
+                      setValidationError(null);
+                    }}
+                    className={`h-10 rounded-[2px] px-1.5 text-[11px] font-extrabold uppercase tracking-[0.05em] transition-colors ${
                       isDelivery
                         ? 'bg-[#211d1a] text-[#f5a623] shadow-xs'
                         : 'text-[#5b534b] hover:text-[#211d1a]'
@@ -306,7 +361,27 @@ export function CartDrawer({
                   </button>
                 </div>
 
-                {!isDelivery ? (
+                {isTable ? (
+                  <div className="mt-3 rounded-[3px] border border-[#f5a623]/60 bg-white/85 p-3.5">
+                    <label
+                      htmlFor="tableNumber"
+                      className="mb-1 block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#574f47]"
+                    >
+                      {t.tableNumberLabel}
+                    </label>
+                    <input
+                      id="tableNumber"
+                      type="text"
+                      maxLength={24}
+                      placeholder={t.tableNumberPlaceholder}
+                      value={customer.tableNumber}
+                      onChange={(e) =>
+                        onUpdateCustomer({ tableNumber: e.target.value })
+                      }
+                      className="h-10 w-full rounded-[2px] border border-[#d2c9bc] bg-white px-3 text-sm font-bold text-[#211d1a]"
+                    />
+                  </div>
+                ) : !isDelivery ? (
                   <p className="mt-2.5 rounded-[3px] border border-[#dcd4c8] bg-white/70 p-3 text-xs leading-relaxed text-[#5c544c]">
                     {t.pickupNotePrefix}
                     <strong>{t.pickupRegion}</strong>
@@ -415,7 +490,7 @@ export function CartDrawer({
                     htmlFor="customerPhone"
                     className="mb-1 block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#574f47]"
                   >
-                    {t.phone}
+                    {isTable ? t.phoneOptional : t.phone}
                   </label>
                   <input
                     id="customerPhone"
@@ -439,7 +514,7 @@ export function CartDrawer({
                     htmlFor="customerEmail"
                     className="mb-1 block text-[11px] font-extrabold uppercase tracking-[0.08em] text-[#574f47]"
                   >
-                    {t.email}
+                    {isTable ? t.emailOptional : t.email}
                   </label>
                   <input
                     id="customerEmail"
@@ -473,39 +548,57 @@ export function CartDrawer({
                 </div>
               </div>
 
-              {/* PIX Info & Agreement */}
-              <div className="rounded-[3px] bg-[#211d1a] p-4 text-[#f8f4ec]">
-                <div className="flex items-center justify-between gap-2">
-                  <strong className="text-xs font-extrabold uppercase tracking-[0.1em] text-[#f5a623]">
-                    {t.pixTitle}
-                  </strong>
-                  <span className="tabular-nums text-sm font-bold">
-                    {formatMoney(cartTotal)}
-                  </span>
+              {/* Payment Info: Pay at Table vs PIX */}
+              {isTable ? (
+                <div className="rounded-[3px] border border-[#f5a623]/55 bg-[#211d1a] p-4 text-[#f8f4ec]">
+                  <div className="flex items-center justify-between gap-2">
+                    <strong className="text-xs font-extrabold uppercase tracking-[0.08em] text-[#f5a623]">
+                      {t.tablePayTitle}
+                    </strong>
+                    <span className="tabular-nums text-sm font-bold">
+                      {formatMoney(cartTotal)}
+                    </span>
+                  </div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-[#d4cbc0]">
+                    {t.tablePayBody}
+                  </p>
                 </div>
-                <p className="mt-1.5 text-xs leading-relaxed text-[#d4cbc0]">
-                  {t.pixSubtitle}
-                </p>
-              </div>
+              ) : (
+                <>
+                  <div className="rounded-[3px] bg-[#211d1a] p-4 text-[#f8f4ec]">
+                    <div className="flex items-center justify-between gap-2">
+                      <strong className="text-xs font-extrabold uppercase tracking-[0.1em] text-[#f5a623]">
+                        {t.pixTitle}
+                      </strong>
+                      <span className="tabular-nums text-sm font-bold">
+                        {formatMoney(cartTotal)}
+                      </span>
+                    </div>
+                    <p className="mt-1.5 text-xs leading-relaxed text-[#d4cbc0]">
+                      {t.pixSubtitle}
+                    </p>
+                  </div>
 
-              <div className="rounded-[3px] border border-[#a83b2f]/35 bg-[#a83b2f]/10 p-3.5 text-xs leading-relaxed text-[#5c1e17]">
-                <strong>{t.pixWarningPrefix}</strong> {t.pixWarningBody1}
-                <strong>{t.pixWarningHighlight}</strong>
-                {t.pixWarningBody2}
-              </div>
+                  <div className="rounded-[3px] border border-[#a83b2f]/35 bg-[#a83b2f]/10 p-3.5 text-xs leading-relaxed text-[#5c1e17]">
+                    <strong>{t.pixWarningPrefix}</strong> {t.pixWarningBody1}
+                    <strong>{t.pixWarningHighlight}</strong>
+                    {t.pixWarningBody2}
+                  </div>
 
-              <label className="flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-[#38312b]">
-                <input
-                  type="checkbox"
-                  checked={pixAgree}
-                  onChange={(e) => {
-                    setPixAgree(e.target.checked);
-                    if (e.target.checked) setValidationError(null);
-                  }}
-                  className="mt-0.5 h-4 w-4 shrink-0 accent-[#638b25]"
-                />
-                <span>{t.pixAgreeText}</span>
-              </label>
+                  <label className="flex cursor-pointer items-start gap-2.5 text-xs leading-relaxed text-[#38312b]">
+                    <input
+                      type="checkbox"
+                      checked={pixAgree}
+                      onChange={(e) => {
+                        setPixAgree(e.target.checked);
+                        if (e.target.checked) setValidationError(null);
+                      }}
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#638b25]"
+                    />
+                    <span>{t.pixAgreeText}</span>
+                  </label>
+                </>
+              )}
 
               {/* Inline Validation Banner */}
               {validationError && (
@@ -521,7 +614,7 @@ export function CartDrawer({
                 </div>
               )}
 
-              {/* Generated WhatsApp Order Preview */}
+              {/* Generated Order Preview */}
               {orderPreview && (
                 <div className="rounded-[3px] border border-[#638b25]/40 bg-white p-4">
                   <div className="flex items-center justify-between gap-2">
@@ -560,6 +653,17 @@ export function CartDrawer({
                     <span>{t.openWhatsApp}</span>
                     <ExternalLink className="h-4 w-4" aria-hidden="true" />
                   </a>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClearCart();
+                      setOrderPreview(null);
+                    }}
+                    className="mt-2 inline-flex h-9 w-full items-center justify-center rounded-[3px] border border-[#d2c9bc] bg-[#f6f1e8] px-4 text-[11px] font-extrabold uppercase tracking-[0.07em] text-[#211d1a] transition-colors hover:bg-[#ebe3d7]"
+                  >
+                    {t.newOrderButton}
+                  </button>
                 </div>
               )}
             </div>
@@ -582,7 +686,9 @@ export function CartDrawer({
               ? t.ctaEmpty
               : orderPreview
                 ? t.ctaUpdate
-                : t.ctaGenerate}
+                : isTable
+                  ? t.ctaGenerateTable
+                  : t.ctaGenerate}
           </button>
         </div>
       </aside>

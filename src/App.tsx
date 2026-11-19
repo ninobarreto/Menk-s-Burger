@@ -14,14 +14,15 @@ import { StoryAndReviewsSection } from './components/StoryAndReviewsSection';
 import { SEED_CATALOG_MAP } from './data/catalog';
 import { useMenksStore } from './hooks/useMenksStore';
 import { getLocalizedProduct, TRANSLATIONS } from './i18n/translations';
-import type { Locale, Product, ToastMessage } from './types';
+import type { Locale, OrderRecord, Product, ToastMessage } from './types';
 
 type PendingConfirm =
   | { kind: 'delete'; product: Product }
   | { kind: 'restore' }
+  | { kind: 'deleteOrder'; order: OrderRecord }
   | null;
 
-const LOCALE_STORAGE_KEY = 'menks_locale';
+const LOCALE_STORAGE_KEY = 'menks_locale_v2';
 const OWNER_CREDS_STORAGE_KEY = 'menks_owner_creds';
 const OWNER_SESSION_STORAGE_KEY = 'menks_owner_session';
 const DEFAULT_OWNER_USER = 'admin';
@@ -39,7 +40,7 @@ function readInitialLocale(): Locale {
   } catch {
     // Ignore storage read errors
   }
-  return 'pt';
+  return 'it';
 }
 
 function readOwnerCredentials(): OwnerCredentials {
@@ -70,15 +71,20 @@ export default function App() {
     catalog,
     cart,
     customer,
+    orders,
     cartCount,
     cartTotal,
     addToCart,
     changeCartQty,
     removeFromCart,
+    clearCart,
     saveProduct,
     deleteProduct,
     restoreCatalog,
     updateCustomer,
+    recordOrder,
+    toggleOrderPaid,
+    deleteOrder,
   } = useMenksStore();
 
   const [locale, setLocale] = useState<Locale>(readInitialLocale);
@@ -97,12 +103,16 @@ export default function App() {
 
   useEffect(() => {
     document.documentElement.lang = locale === 'it' ? 'it' : 'pt-BR';
+  }, [locale]);
+
+  const handleChangeLocale = useCallback((next: Locale) => {
+    setLocale(next);
     try {
-      localStorage.setItem(LOCALE_STORAGE_KEY, locale);
+      localStorage.setItem(LOCALE_STORAGE_KEY, next);
     } catch {
       // Ignore storage write errors
     }
-  }, [locale]);
+  }, []);
 
   const notify = useCallback(
     (text: string, tone: ToastMessage['tone'] = 'info') => {
@@ -200,6 +210,18 @@ export default function App() {
     [notify, ownerCreds.username, t.ownerAuth.toastPasswordUpdated]
   );
 
+  const handleToggleOrderPaid = useCallback(
+    (order: OrderRecord) => {
+      toggleOrderPaid(order.id);
+      if (order.paymentStatus === 'pago') {
+        notify(t.cashier.toastReopened(order.protocol), 'info');
+      } else {
+        notify(t.cashier.toastMarkedPaid(order.protocol), 'success');
+      }
+    },
+    [notify, t.cashier, toggleOrderPaid]
+  );
+
   const handleOpenCart = useCallback(() => {
     setAdminOpen(false);
     setLoginOpen(false);
@@ -232,6 +254,9 @@ export default function App() {
     } else if (pendingConfirm.kind === 'restore') {
       restoreCatalog();
       notify(t.toasts.restoredCatalog, 'success');
+    } else if (pendingConfirm.kind === 'deleteOrder') {
+      deleteOrder(pendingConfirm.order.id);
+      notify(t.cashier.toastOrderDeleted(pendingConfirm.order.protocol), 'info');
     }
     setPendingConfirm(null);
   };
@@ -242,7 +267,7 @@ export default function App() {
         cartCount={cartCount}
         locale={locale}
         t={t.nav}
-        onChangeLocale={setLocale}
+        onChangeLocale={handleChangeLocale}
         onOpenCart={handleOpenCart}
       />
 
@@ -286,7 +311,9 @@ export default function App() {
         onClose={() => setCartOpen(false)}
         onChangeQty={changeCartQty}
         onRemoveItem={removeFromCart}
+        onClearCart={clearCart}
         onUpdateCustomer={updateCustomer}
+        onRecordOrder={recordOrder}
         onNotify={notify}
       />
 
@@ -299,11 +326,14 @@ export default function App() {
 
       <AdminModal
         open={adminOpen && isOwner}
+        locale={locale}
         t={t.admin}
         menuT={t.menu}
         ownerAuthT={t.ownerAuth}
+        cashierT={t.cashier}
         editingProductId={editingProductId}
         catalog={catalog}
+        orders={orders}
         onClose={() => {
           setAdminOpen(false);
           setEditingProductId(null);
@@ -313,6 +343,10 @@ export default function App() {
           setPendingConfirm({ kind: 'delete', product })
         }
         onRequestRestoreCatalog={() => setPendingConfirm({ kind: 'restore' })}
+        onToggleOrderPaid={handleToggleOrderPaid}
+        onRequestDeleteOrder={(order) =>
+          setPendingConfirm({ kind: 'deleteOrder', order })
+        }
         onChangePassword={handleChangeOwnerPassword}
         onLogout={handleOwnerLogout}
         onNotify={notify}
@@ -323,21 +357,30 @@ export default function App() {
         title={
           pendingConfirm?.kind === 'delete'
             ? t.confirm.deleteTitle
-            : t.confirm.restoreTitle
+            : pendingConfirm?.kind === 'deleteOrder'
+              ? t.cashier.confirmDeleteOrderTitle
+              : t.confirm.restoreTitle
         }
         description={
           pendingConfirm?.kind === 'delete'
             ? t.confirm.deleteDesc(pendingConfirm.product.name)
-            : t.confirm.restoreDesc
+            : pendingConfirm?.kind === 'deleteOrder'
+              ? t.cashier.confirmDeleteOrderDesc(pendingConfirm.order.protocol)
+              : t.confirm.restoreDesc
         }
         confirmLabel={
           pendingConfirm?.kind === 'delete'
             ? t.confirm.deleteConfirm
-            : t.confirm.restoreConfirm
+            : pendingConfirm?.kind === 'deleteOrder'
+              ? t.cashier.confirmDeleteOrderAction
+              : t.confirm.restoreConfirm
         }
         cancelLabel={t.confirm.cancel}
         closeAria={t.confirm.closeAria}
-        destructive={pendingConfirm?.kind === 'delete'}
+        destructive={
+          pendingConfirm?.kind === 'delete' ||
+          pendingConfirm?.kind === 'deleteOrder'
+        }
         onConfirm={handleConfirmAction}
         onCancel={() => setPendingConfirm(null)}
       />

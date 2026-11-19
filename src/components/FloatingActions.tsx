@@ -1,4 +1,11 @@
-import { ArrowRight, CheckCircle2, Info, MessageCircle, XCircle } from 'lucide-react';
+import {
+  ArrowRight,
+  ArrowUp,
+  CheckCircle2,
+  Info,
+  MessageCircle,
+  XCircle,
+} from 'lucide-react';
 import { formatMoney, WHATSAPP_NUMBER } from '../data/catalog';
 import type { Translations } from '../i18n/translations';
 import type { ToastMessage } from '../types';
@@ -18,6 +25,10 @@ export function FloatingActions({
   onOpenCart,
   toasts,
 }: FloatingActionsProps) {
+  const handleScrollTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <>
       {/* Subtle Toast Stack */}
@@ -52,6 +63,20 @@ export function FloatingActions({
           ))}
         </div>
       )}
+
+      {/* Fixed Right-Side Back-to-Start Arrow */}
+      <button
+        type="button"
+        onClick={handleScrollTop}
+        aria-label={t.backToTopAria}
+        title={t.backToTopAria}
+        className="fixed bottom-20 right-4 z-30 flex flex-col items-center justify-center gap-0.5 rounded-[3px] border border-[#f5a623]/55 bg-[#171514]/95 px-2.5 py-2 text-[#f5a623] shadow-xl backdrop-blur-sm transition-all duration-150 hover:-translate-y-0.5 hover:bg-[#f5a623] hover:text-[#23190e] sm:right-6"
+      >
+        <ArrowUp className="h-4 w-4" aria-hidden="true" />
+        <span className="text-[9px] font-extrabold uppercase leading-none tracking-[0.08em]">
+          {t.backToTopLabel}
+        </span>
+      </button>
 
       {/* Compact Bottom Floating Controls (<= 15% mobile viewport height) */}
       <div className="pointer-events-none fixed inset-x-4 bottom-4 z-30 flex items-center justify-between gap-3 sm:inset-x-6">
